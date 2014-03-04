@@ -1,0 +1,6 @@
+name: Bearing Clojure
+markdown: redcarpet
+pygments: true
+include: [ images ]
+encoding: UTF-8
+safe: true
