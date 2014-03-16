@@ -70,7 +70,8 @@ categories: clojure
    ))
 
 (frequencies (map second (map simplify-position all-positions)))
-;; {"mgmt" 182, "hr" 14, "developer" 118, "designer" 23, "admin" 8, "qa" 51, "student" 2, "analysis" 13, "?" 158}
+;; {"mgmt" 182, "hr" 14, "developer" 118, "designer" 23, "admin" 8,
+;;  "qa" 51, "student" 2, "analysis" 13, "?" 158}
 
 (defn person->simple-position [person]
   (-> person person->position simplify-position))
@@ -79,7 +80,10 @@ categories: clojure
 Приступим к тяжёлому труду разгребателя данных из интернетов:
 {% highlight clojure %}
 (filter #(= (second %) "?") (map simplify-position all-positions))
-;; (["" "?"] ["технический продюсер" "?"] ["верстальщик xaml" "?"] ["ios, android, techdoc" "?"] ["sdet" "?"] ["n/a" "?"] ["многостаночник" "?"] ["главный за тех. поддержку продуктов" "?"] ["гендир" "?"] ["llc, lowlevel optimizations voodoo" "?"] ["главный" "?"] ["сотрудник компании" "?"] ["junior game designer" "?"]
+;; (["" "?"] ["технический продюсер" "?"] ["верстальщик xaml" "?"] ["ios, android, techdoc" "?"]
+;;  ["sdet" "?"] ["n/a" "?"] ["многостаночник" "?"] ["главный за тех. поддержку продуктов" "?"]
+;;  ["гендир" "?"] ["llc, lowlevel optimizations voodoo" "?"] ["главный" "?"]
+;;  ["сотрудник компании" "?"] ["junior game designer" "?"]
 {% endhighlight %}
 
 Люди крайне творчески подошли к задаче указания своей должности, отфильтруем данные в первом приближении:
@@ -108,7 +112,11 @@ categories: clojure
 ;; {"mgmt" 224, "hr" 16, "developer" 132, "designer" 27, "admin" 10, "qa" 53, "na" 92, "student" 2, "analysis" 13}
 
 (filter #(= (second %) "na") (map simplify-position all-positions))
-;; (["" "na"] ["технический продюсер" "na"] ["верстальщик xaml" "na"] ["n/a" "na"] ["многостаночник" "na"] ["llc, lowlevel optimizations voodoo" "na"] ["сотрудник компании" "na"] ["business analyst" "na"] ["бухгалтер" "na"] ["разнорабочий" "na"] ["манагер праэктаф" "na"] ["практикант-магистр группы разработки по" "na"] ["патентный поверенный" "na"] ["#####" "na"] ["мп" "na"] ["html-coder" "na"] ["фронтэндир" "na"] ["ассистент департамента" "na"] ["строитель звезды смерти" "na"]
+;; (["" "na"] ["технический продюсер" "na"] ["верстальщик xaml" "na"] ["n/a" "na"]
+;;  ["многостаночник" "na"] ["llc, lowlevel optimizations voodoo" "na"] ["сотрудник компании" "na"]
+;;  ["business analyst" "na"] ["бухгалтер" "na"] ["разнорабочий" "na"] ["манагер праэктаф" "na"]
+;;  ["практикант-магистр группы разработки по" "na"] ["патентный поверенный" "na"] ["#####" "na"]
+;;  ["мп" "na"] ["html-coder" "na"] ["фронтэндир" "na"] ["ассистент департамента" "na"] ["строитель звезды смерти" "na"]
 {% endhighlight %}
 
 Дальше фильтровать смысла нет. Осталось разбить компании по размеру, для этого построим отображение "схлопнутое имя компании" &#8594; "примерный размер компании":
@@ -159,8 +167,9 @@ categories: clojure
 {% endhighlight %}
 
 Теперь нужно схлопнуть данные и привести их к формату:
-{% highlight json %}
-var raw_data = [{"sex": "m", "company": "50+", "position": "admin", "amount": 5}, {"sex": "f", "company": "1", "position": "designer", "amount": 1}];
+{% highlight javascript %}
+var raw_data = [{"sex": "m", "company": "50+", "position": "admin", "amount": 5},
+                {"sex": "f", "company": "1", "position": "designer", "amount": 1}];
 {% endhighlight %}
 
 Для этого у нас есть прекрасная функция frequencies:
