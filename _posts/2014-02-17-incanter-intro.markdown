@@ -5,9 +5,9 @@ date:   "2014-02-17 21:00:00"
 categories: clojure
 ---
 
-Что это? Простой пример использования Clojure+Incanter для разбора логов, показа графиков, интерактивного изменение параметров этих графиков, работы с LightTable.
+Как с помощью [Light Table](http://www.lighttable.com/) начать использовать [Incanter](http://incanter.org/)
 
-Потребуются: leiningen и lighttable.
+Потребуются: [leiningen](http://leiningen.org/) и Light Table.
 
 Выполняем в консоли:
 
@@ -15,7 +15,7 @@ categories: clojure
 lein new incanter-examples
 {% endhighlight %}
 
-Открываем profile.clj, правим секцию dependencies до состояния: 
+Открываем profile.clj, правим секцию dependencies до состояния:
 {% highlight clojure %}
 :dependencies [[org.clojure/clojure "1.5.1"]
                [incanter "1.5.4"]]

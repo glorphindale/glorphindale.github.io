@@ -175,7 +175,7 @@ var raw_data = [{"sex": "m", "company": "50+", "position": "admin", "amount": 5}
 Для этого у нас есть прекрасная функция frequencies:
 
 {% highlight clojure %}
-(frequencies transformed-data)
+(def freqs (frequencies transformed-data))
 ;; {["m" "6-10" "developer"] 99, ["f" "16-20" "mgmt"] 6, ["m" "6-10" "hr"] 1, ["f" "50+" "designer"] 1,
 {% endhighlight %}n
 
@@ -195,4 +195,6 @@ var raw_data = [{"sex": "m", "company": "50+", "position": "admin", "amount": 5}
 {% endhighlight %}
 
 Итог:
-<center><img src="/images/codefest-2013-result.png" alt="Histogram" width="700"></center>
+<center><img src="/images/codefest-2013-result.png" alt="Histogram" width="800"></center>
+
+Полный файл с кодом можно взять [на GitHub](https://gist.github.com/glorphindale/9646119).
