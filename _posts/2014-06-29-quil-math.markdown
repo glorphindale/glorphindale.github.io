@@ -37,7 +37,7 @@ categories: clojure
   :renderer :opengl)
 {% endhighlight %}
 И нажмём Ctrl+Shift+Enter. LightTable запустит процесс с Clojure, установит с ним соединение, выкачает все необходимые библиотеки и вычислить всё содержимое файла. Quil запустит набросок circles с размером экрана 400 на 400 пикселей, именем окна "Circles", один раз выполнит функцию setup, после чего будем периодически вызывать функцию draw. Результатом будет красивый белый круг на чёрном фоне.
-<center><img src="/images/quil-math/1-circle.png" alt="Circle" width="800"></center>
+<center><img src="/images/quil-math/1-circle.png" alt="Circle"></center>
 
 Смысл жизни найден, на этом можно закончить.
 
@@ -57,7 +57,7 @@ categories: clojure
 и отправим её в REPL. С картинкой ничего не произошло. Почему? Функция setup выполняется только на старте наброска. Для подхвата изменений нам придётся закрыть старый набросок и ещё раз отправить defsketch в REPL. На экране появился набросок с квадратом. Чтобы не перезапускать программу, рекомендуется в setup оставлять только настройку общих параметров приложения, таких как сглаживание (smooth), количество кадров в секунду (frame-rate) и так далее.
 
 Информационное отступление: если в процессе работы с библиотекой quil (да и с любой другой) возникают вопросы по документации конкретной функции, можно нажать Ctrl+D с курсором на этой функции, и LightTable покажет всё что о ней знает.
-<center><img src="/images/quil-math/2-help.png" alt="Help" width="800"></center>
+<center><img src="/images/quil-math/2-help.png" alt="Help"></center>
 
 Добавим немного движения и цвета в наш чёрно-белый мир:
 {% highlight clojure %}
@@ -69,7 +69,7 @@ categories: clojure
 {% endhighlight %}
 
 Теперь у нас есть бегающий разноцветный квадрат. Если цвета всё ещё мало &mdash; можно удалить строку qc/background. Почему так происходит? Вызов qc/background заполняет весь кадр указанным цветом. Если этого вызова нет, Quil рисует новый кадр поверх старого.
-<center><img src="/images/quil-math/3-colors.png" alt="Colors" width="800"></center>
+<center><img src="/images/quil-math/3-colors.png" alt="Colors"></center>
 
 Информационное отступление: одним из самых мощных средств отладки в LightTable являются watches(наблюдатели). Наблюдателя можно поставить на сивмол, который уже привязан к какому-то значению (!!! ТУПАЯ ФОРМУЛИРОВКА), например, в теле формы let (но не в векторе связывания в квадратных скобках). Для этого надо навести курсор на сивмол, и, либо нажать Alt+D, либо, вызвав командную панель через Ctrl+Space выбрать Editor: Watch selection.
 Теперь LightTable обернёт этот сивмол в свой код, и при изменении его в работающем процессе, значение будет отправлено в LightTable и выведено в строке, где поставлен наблюдатель. Можно попробовать на строке (qc/fill ts (- 255 ts) 0), установив курсор на первое упоминание ts. В конце строки появится постоянно меняющееся значение. (см. предыдущую картинку)
@@ -105,7 +105,7 @@ categories: clojure
       (qc/ellipse posx posy 5 5))))
 {% endhighlight %}
 Ctrl+Enter, и теперь по экрану точка выписывает окружность, а благодаря тому, что мы не вызываем в draw очистку экрана через qc/background, через некоторое время будет видна вся окружность.
-<center><img src="/images/quil-math/4-circle.png" alt="Circle" width="800"></center>
+<center><img src="/images/quil-math/4-circle.png" alt="Circle"></center>
 
 Самые пытливые спросят: а что, если поиграть коэффициентами аргументов синуса и косинуса?
 {% highlight clojure %}
@@ -116,7 +116,7 @@ Ctrl+Enter, и теперь по экрану точка выписывает о
     [posx posy]))
 {% endhighlight %}
 
-<center><img src="/images/quil-math/5-koeff.png" alt="Koeff" width="800"></center>
+<center><img src="/images/quil-math/5-koeff.png" alt="Koeff"></center>
 Эффект интересный, но не очень удобно каждый раз править коэффициенты и вызывать qc/background 0 для очистки экрана. Добавим интерактивности, позволим управлять коэффициентами с помощью клавиш:
 
 {% highlight clojure %}
@@ -166,7 +166,7 @@ Ctrl+Enter, и теперь по экрану точка выписывает о
   :renderer :opengl)
 {% endhighlight %}
 
-<center><img src="/images/quil-math/6-changes.png" alt="Changes" width="800"></center>
+<center><img src="/images/quil-math/6-changes.png" alt="Changes"></center>
 
 Для большей наглядности будем рисовать отдельные части координаты точки:
 {% highlight clojure %}
@@ -237,9 +237,9 @@ Ctrl+Enter, и теперь по экрану точка выписывает о
 {% endhighlight %}
 
 С высоты птичьего полёта можно увидеть много интересного:
-<center><img src="/images/quil-math/7-all-big.png" alt="All the circles" width="800"></center>
+<center><img src="/images/quil-math/7-all-big.png" alt="All the circles"></center>
 
 "Поиграв с коэффициентами" в формуле можно получить много других интересных форм:
-<center><img src="/images/quil-math/8-others.png" alt="Other circles" width="800"></center>
+<center><img src="/images/quil-math/8-others.png" alt="Other circles"></center>
 
 Полный файл с кодом можно взять [на GitHub](https://github.com/glorphindale/visimath/blob/master/src/visimath/circles.clj).
