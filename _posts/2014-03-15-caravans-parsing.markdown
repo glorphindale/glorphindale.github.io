@@ -177,7 +177,7 @@ var raw_data = [{"sex": "m", "company": "50+", "position": "admin", "amount": 5}
 {% highlight clojure %}
 (def freqs (frequencies transformed-data))
 ;; {["m" "6-10" "developer"] 99, ["f" "16-20" "mgmt"] 6, ["m" "6-10" "hr"] 1, ["f" "50+" "designer"] 1,
-{% endhighlight %}n
+{% endhighlight %}
 
 Приведём к окончательному виду:
 {% highlight clojure %}
