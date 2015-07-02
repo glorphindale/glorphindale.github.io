@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Bearing Clojure / Медвекложа: Грабим корованы с Enlive, часть вторая</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Alegreya:400italic,700italic,400,700' rel='stylesheet'
+          type='text/css'>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.1/styles/default.min.css">
+    <link href="../css/screen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+
+<nav class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/index.html">Bearing Clojure / Медвекложа</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li ><a href="/index.html">Home</a></li>
+                <li
+                ><a href="/archives.html">Archives</a></li>
+                
+                <li
+                >
+                <a href="/pages/about.html">About</a>
+                </li>
+                
+                <li><a href="/feed.xml">RSS</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div><!--/.container-fluid -->
+</nav>
+
+
+<div class="container">
+
+
+    <div class="row">
+        <div class="col-lg-9">
+            <div id="content">
+                
+<div id="post">
+    <div id="post-header">
+    <div id="post-meta" class="row">
+        <div class="col-lg-6">March 15, 2014</div>
+        
+    </div>
+    <h2>Грабим корованы с Enlive, часть вторая</h2>
+</div>
+<div>
+    
+    <p>В прошлый раз мы остановились на том, что получили сырые данные об участниках Codefest 2013. Чтобы можно было построить сколько-нибудь полезную статистику нам придётся сырые данные немного потушить до готовности.</p><p>Начнём с простого &mdash; преобразуем имена в пол. Уникальных имён у нас всего 192:<pre><code>&#40;def data &#40;chesh/parse-string &#40;slurp &quot;codefest-2013-raw.json&quot;&#41; true&#41;&#41;
+
+&#40;defn person-&gt;name &#91;person&#93;
+  &#40;-&gt; person
+      first
+      &#40;string/split #&quot; &quot; 2&#41;
+      first
+      string/lower-case&#41;&#41;
+
+&#40;def all-names &#40;set &#40;map person-&gt;name data&#41;&#41;&#41;
+
+&#40;count all-names&#41; ;; 192
+ </code></pre></p><p>Попробуем написать правила преобразования:<pre><code>&#40;defn name-&gt;sex &#91;name&#93;
+  &#40;let &#91;letter &#40;last name&#41;&#93;
+    &#40;cond
+     &#40;#{&quot;данила&quot; &quot;тема&quot; &quot;илья&quot; &quot;тёма&quot; &quot;гриша&quot; &quot;никита&quot; &quot;юра&quot; &quot;nikita&quot; &quot;саша&quot; &quot;женя&quot;} name&#41; &#91;name &quot;m&quot;&#93;
+     &#40;#{\a \а \я} letter&#41; &#91;name &quot;f&quot;&#93;
+     &#40;#{\н \й \р \r \n \л \с \в \п \д \x \w \m \s \y \l \м \т \ь \о \г \б \к \i \d \e \k} letter&#41; &#91;name &quot;m&quot;&#93;
+     :default &#91;name &quot;?&quot;&#93;
+     &#41;&#41;&#41;
+
+&#40;frequencies &#40;map second &#40;map name-&gt;sex all-names&#41;&#41;&#41;
+;; {\f 75, \m 117}
+
+&#40;defn person-&gt;sex &#91;person&#93;
+  &#40;-&gt; person person-&gt;name name-&gt;sex&#41;&#41;
+ </code></pre></p><p>Теперь попробуем уменьшить количество должностей, возьмём список преобразований из парсера 2012 года:<pre><code>&#40;defn person-&gt;position &#91;person&#93;
+  &#40;-&gt; person
+      &#40;#&#40;if &#40;nth % 2&#41; &#40;nth % 2&#41; &quot;&quot;&#41;&#41;
+      string/lower-case&#41;&#41;
+
+&#40;def all-positions &#40;set &#40;map person-&gt;position data&#41;&#41;&#41;
+
+&#40;count all-positions&#41; ;; 569
+
+&#40;defn string-contains? &#91;s vars&#93;
+  &#40;seq &#40;filter true? &#40;map #&#40;.contains s %&#41; vars&#41;&#41;&#41;&#41;
+
+&#40;defn simplify-position &#91;position&#93;
+  &#40;cond
+   &#40;string-contains? position #{&quot;hr&quot; &quot;персонал&quot;}&#41; &#91;position &quot;hr&quot;&#93;
+   &#40;string-contains? position #{&quot;дизайнер&quot; &quot;ui&quot; &quot;интерф&quot;}&#41; &#91;position &quot;designer&quot;&#93;
+   &#40;string-contains? position #{&quot;director&quot; &quot;директор&quot; &quot;manager&quot; &quot;начальник&quot; &quot;pm&quot; &quot;leader&quot; &quot;менеджер&quot;
+            &quot;руководитель&quot; &quot;lead&quot; &quot;лидер&quot; &quot;рук.&quot;}&#41; &#91;position &quot;mgmt&quot;&#93;
+   &#40;string-contains? position #{&quot;qa&quot; &quot;тестирован&quot; &quot;качеств&quot; &quot;test&quot; &quot;тестировщик&quot;}&#41; &#91;position &quot;qa&quot;&#93;
+   &#40;string-contains? position #{&quot;аналитик&quot; &quot;архи&quot;}&#41; &#91;position &quot;analysis&quot;&#93;
+   &#40;string-contains? position #{&quot;developer&quot; &quot;разработчик&quot; &quot;программист&quot; &quot;engineer&quot; &quot;rnd&quot;}&#41; &#91;position &quot;developer&quot;&#93;
+   &#40;string-contains? position #{&quot;админ&quot;}&#41; &#91;position &quot;admin&quot;&#93;
+   &#40;string-contains? position #{&quot;студент&quot;}&#41; &#91;position &quot;student&quot;&#93;
+   :default &#91;position &quot;na&quot;&#93;
+   &#41;&#41;
+
+&#40;frequencies &#40;map second &#40;map simplify-position all-positions&#41;&#41;&#41;
+;; {&quot;mgmt&quot; 182, &quot;hr&quot; 14, &quot;developer&quot; 118, &quot;designer&quot; 23, &quot;admin&quot; 8,
+;;  &quot;qa&quot; 51, &quot;student&quot; 2, &quot;analysis&quot; 13, &quot;?&quot; 158}
+
+&#40;defn person-&gt;simple-position &#91;person&#93;
+  &#40;-&gt; person person-&gt;position simplify-position&#41;&#41;
+ </code></pre></p><p>Приступим к тяжёлому труду разгребателя данных из интернетов:<pre><code>&#40;filter #&#40;= &#40;second %&#41; &quot;?&quot;&#41; &#40;map simplify-position all-positions&#41;&#41;
+;; &#40;&#91;&quot;&quot; &quot;?&quot;&#93; &#91;&quot;технический продюсер&quot; &quot;?&quot;&#93; &#91;&quot;верстальщик xaml&quot; &quot;?&quot;&#93; &#91;&quot;ios, android, techdoc&quot; &quot;?&quot;&#93;
+;;  &#91;&quot;sdet&quot; &quot;?&quot;&#93; &#91;&quot;n/a&quot; &quot;?&quot;&#93; &#91;&quot;многостаночник&quot; &quot;?&quot;&#93; &#91;&quot;главный за тех. поддержку продуктов&quot; &quot;?&quot;&#93;
+;;  &#91;&quot;гендир&quot; &quot;?&quot;&#93; &#91;&quot;llc, lowlevel optimizations voodoo&quot; &quot;?&quot;&#93; &#91;&quot;главный&quot; &quot;?&quot;&#93;
+;;  &#91;&quot;сотрудник компании&quot; &quot;?&quot;&#93; &#91;&quot;junior game designer&quot; &quot;?&quot;&#93;
+ </code></pre></p><p>Люди крайне творчески подошли к задаче указания своей должности, отфильтруем данные в первом приближении:<pre><code>
+&#40;defn simplify-position &#91;position&#93;
+  &#40;cond
+   &#40;string-contains? position #{&quot;hr&quot; &quot;персонал&quot; &quot;алексей сухоруков&quot; &quot;людям&quot;}&#41; &#91;position &quot;hr&quot;&#93;
+   &#40;string-contains? position #{&quot;дизайнер&quot; &quot;ui&quot; &quot;интерф&quot; &quot;designer&quot; &quot;ux&quot;}&#41; &#91;position &quot;designer&quot;&#93;
+   &#40;string-contains? position #{&quot;director&quot; &quot;директор&quot; &quot;manager&quot; &quot;начальник&quot; &quot;pm&quot; &quot;cio&quot;
+                                &quot;leader&quot; &quot;менеджер&quot; &quot;руководит&quot; &quot;lead&quot; &quot;лидер&quot; &quot;cto&quot; &quot;boss&quot;
+                                &quot;рук.&quot; &quot;владелец&quot; &quot;ceo&quot; &quot;главный&quot; &quot;лид&quot; &quot;chief&quot; &quot;пм&quot; &quot;mgr&quot;
+                                &quot;управля&quot; &quot;гендир&quot; &quot;vp&quot; &quot;соучре&quot; &quot;управл&quot; &quot;coo&quot; &quot;партнер&quot; &quot;head&quot;}&#41; &#91;position &quot;mgmt&quot;&#93;
+   &#40;string-contains? position #{&quot;qa&quot; &quot;тестирован&quot; &quot;качеств&quot; &quot;test&quot; &quot;тестировщик&quot; &quot;поняша&quot;
+                                &quot;тестер&quot; &quot;sdet&quot;}&#41; &#91;position &quot;qa&quot;&#93;
+   &#40;string-contains? position #{&quot;аналитик&quot; &quot;архи&quot; &quot;architect&quot;}&#41; &#91;position &quot;analysis&quot;&#93;
+   &#40;string-contains? position #{&quot;developer&quot; &quot;разработчик&quot; &quot;программист&quot; &quot;програмист&quot;
+                                &quot;engineer&quot; &quot;rnd&quot; &quot;инженер&quot; &quot;program&quot;
+                                &quot;android&quot; &quot;java&quot; &quot;scala&quot; &quot;javascript&quot; &quot;sde&quot;}&#41; &#91;position &quot;developer&quot;&#93;
+   &#40;string-contains? position #{&quot;админ&quot; &quot;admin&quot; &quot;devops&quot;}&#41; &#91;position &quot;admin&quot;&#93;
+   &#40;string-contains? position #{&quot;студент&quot;}&#41; &#91;position &quot;student&quot;&#93;
+   :default &#91;position &quot;na&quot;&#93;
+   &#41;&#41;
+
+&#40;frequencies &#40;map second &#40;map simplify-position all-positions&#41;&#41;&#41;
+;; {&quot;mgmt&quot; 224, &quot;hr&quot; 16, &quot;developer&quot; 132, &quot;designer&quot; 27, &quot;admin&quot; 10, &quot;qa&quot; 53, &quot;na&quot; 92, &quot;student&quot; 2, &quot;analysis&quot; 13}
+
+&#40;filter #&#40;= &#40;second %&#41; &quot;na&quot;&#41; &#40;map simplify-position all-positions&#41;&#41;
+;; &#40;&#91;&quot;&quot; &quot;na&quot;&#93; &#91;&quot;технический продюсер&quot; &quot;na&quot;&#93; &#91;&quot;верстальщик xaml&quot; &quot;na&quot;&#93; &#91;&quot;n/a&quot; &quot;na&quot;&#93;
+;;  &#91;&quot;многостаночник&quot; &quot;na&quot;&#93; &#91;&quot;llc, lowlevel optimizations voodoo&quot; &quot;na&quot;&#93; &#91;&quot;сотрудник компании&quot; &quot;na&quot;&#93;
+;;  &#91;&quot;business analyst&quot; &quot;na&quot;&#93; &#91;&quot;бухгалтер&quot; &quot;na&quot;&#93; &#91;&quot;разнорабочий&quot; &quot;na&quot;&#93; &#91;&quot;манагер праэктаф&quot; &quot;na&quot;&#93;
+;;  &#91;&quot;практикант-магистр группы разработки по&quot; &quot;na&quot;&#93; &#91;&quot;патентный поверенный&quot; &quot;na&quot;&#93; &#91;&quot;#####&quot; &quot;na&quot;&#93;
+;;  &#91;&quot;мп&quot; &quot;na&quot;&#93; &#91;&quot;html-coder&quot; &quot;na&quot;&#93; &#91;&quot;фронтэндир&quot; &quot;na&quot;&#93; &#91;&quot;ассистент департамента&quot; &quot;na&quot;&#93; &#91;&quot;строитель звезды смерти&quot; &quot;na&quot;&#93;
+ </code></pre></p><p>Дальше фильтровать смысла нет. Осталось разбить компании по размеру, для этого построим отображение "схлопнутое имя компании" &#8594; "примерный размер компании":</p><pre><code>&#40;def all-companies &#40;map second data&#41;&#41;
+
+&#40;defn simplify-company &#91;company&#93;
+  &#40;cond
+   &#40;#{&quot;2gis&quot;} company&#41; &quot;2гис&quot;
+   &#40;#{&quot;ооо «компания холидей»&quot;} company&#41; &quot;ооо \&quot;компания холидей\&quot;&quot;
+   &#40;#{&quot;playtox llc&quot;} company&#41; &quot;playtox&quot;
+   &#40;#{&quot;новео&quot;} company&#41; &quot;noveo&quot;
+   &#40;#{&quot;Кадровое Агентство Алексея Сухорукова&quot;} company&#41; &quot;Alexey Suhorukov's Recruitment Agency&quot;
+   :default company&#41;&#41;
+
+&#40;defn bin-company &#91;&#91;c f&#93;&#93;
+  &#40;cond
+   &#40;&lt; 0 f 2&#41; {c &quot;1&quot;}
+   &#40;&lt; 1 f 6&#41; {c &quot;2-5&quot;}
+   &#40;&lt; 5 f 11&#41; {c &quot;6-10&quot;}
+   &#40;&lt; 10 f 16&#41; {c &quot;11-15&quot;}
+   &#40;&lt; 15 f 21&#41; {c &quot;16-20&quot;}
+   &#40;&lt; 20 f 51&#41; {c &quot;21-50&quot;}
+   &#40;&lt; 50 f&#41; {c &quot;50+&quot;}&#41;&#41;
+
+&#40;def company-freqs
+  &#40;-&gt;&gt; all-companies
+       &#40;map simplify-company&#41;
+       frequencies
+       &#40;map bin-company&#41;
+       &#40;apply merge&#41;&#41;&#41;
+
+&#40;defn person-&gt;company-size &#91;person&#93;
+  &#40;-&gt; person second simplify-company company-freqs&#41;&#41;
+</code></pre><p>Используя все полученные функции выполним итоговое преобразование:<pre><code>&#40;defn transform-person &#91;person&#93;
+  &#91;&#40;-&gt; person person-&gt;sex second&#41; &#40;person-&gt;company-size person&#41; &#40;-&gt; person person-&gt;simple-position second&#41;&#93;&#41;
+
+&#40;map transform-person &#40;take 15 data&#41;&#41;
+;; &#40;&#91;&quot;m&quot; &quot;1&quot; &quot;developer&quot;&#93; &#91;&quot;m&quot; &quot;1&quot; &quot;mgmt&quot;&#93; &#91;&quot;m&quot; &quot;1&quot; &quot;mgmt&quot;&#93; &#91;&quot;m&quot; &quot;1&quot; &quot;na&quot;&#93; &#91;&quot;m&quot; &quot;2-5&quot; &quot;developer&quot;&#93;
+;;  &#91;&quot;f&quot; &quot;16-20&quot; &quot;mgmt&quot;&#93; &#91;&quot;m&quot; &quot;26-50&quot; &quot;mgmt&quot;&#93; &#91;&quot;m&quot; &quot;2-5&quot; &quot;mgmt&quot;&#93; &#91;&quot;m&quot; &quot;1&quot; &quot;mgmt&quot;&#93; &#91;&quot;m&quot; &quot;50+&quot; &quot;qa&quot;&#93;
+;;  &#91;&quot;f&quot; &quot;1&quot; &quot;na&quot;&#93; &#91;&quot;m&quot; &quot;50+&quot; &quot;qa&quot;&#93; &#91;&quot;f&quot; &quot;2-5&quot; &quot;designer&quot;&#93; &#91;&quot;m&quot; &quot;50+&quot; &quot;qa&quot;&#93; &#91;&quot;f&quot; &quot;6-10&quot; &quot;na&quot;&#93;&#41;
+&#40;def transformed-data &#40;map transform-person data&#41;&#41;
+ </code></pre></p><p>Теперь нужно схлопнуть данные и привести их к формату:<pre><code>var raw&#95;data = &#91;{&quot;sex&quot;: &quot;m&quot;, &quot;company&quot;: &quot;50+&quot;, &quot;position&quot;: &quot;admin&quot;, &quot;amount&quot;: 5},
+                {&quot;sex&quot;: &quot;f&quot;, &quot;company&quot;: &quot;1&quot;, &quot;position&quot;: &quot;designer&quot;, &quot;amount&quot;: 1}&#93;;
+ </code></pre></p><p>Для этого у нас есть прекрасная функция frequencies:</p><pre><code>&#40;def freqs &#40;frequencies transformed-data&#41;&#41;
+;; {&#91;&quot;m&quot; &quot;6-10&quot; &quot;developer&quot;&#93; 99, &#91;&quot;f&quot; &quot;16-20&quot; &quot;mgmt&quot;&#93; 6, &#91;&quot;m&quot; &quot;6-10&quot; &quot;hr&quot;&#93; 1, &#91;&quot;f&quot; &quot;50+&quot; &quot;designer&quot;&#93; 1,
+</code></pre><p>Приведём к окончательному виду:<pre><code>
+&#40;defn finalize &#91;&#91;&#91;sex company position&#93; v&#93;&#93;
+  {&quot;sex&quot; sex &quot;company&quot; company &quot;position&quot; position &quot;amount&quot; v}&#41;
+
+&#40;def result
+  &#40;str &quot;var raw&#95;data =&quot;
+    &#40;chesh/generate-string
+     &#40;map finalize freqs&#41;&#41;
+    &quot;;&quot;&#41;&#41;
+
+&#40;spit &quot;codefest-2013.json&quot; result&#41;
+ </code></pre></p><p>Итог: <center><img width="750" src="/posts/caravans-parsing/codefest-2013-result.png" alt="Histogram" width="800"></center></p><p>Полный файл с кодом можно взять <a href='https://gist.github.com/glorphindale/9646119'>на GitHub</a>.</p>
+</div>
+
+<div id="post-tags">
+    <b>Tags: </b>
+    
+    <a href="/tags/clojure.html">clojure</a>
+    
+</div>
+
+
+    <div id="prev-next">
+        
+        <a href="/posts/2014-06-29-quil-math.html">&laquo; quil, sin и cos</a>
+        
+        
+        <a class="right" href="/posts/2014-02-24-enlive-caravans.html">Грабим корованы с Enlive, часть первая &raquo;</a>
+        
+    </div>
+
+    
+
+
+</div>
+
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div id="sidebar">
+                <h3>Links</h3>
+                <ul id="links">
+                    
+                </ul>
+                
+                <div id="recent">
+                    <h3>Recent Posts</h3>
+                    <ul>
+                        
+                        <li><a href="/posts/2014-06-29-quil-math.html">quil, sin и cos</a></li>
+                        
+                        <li><a href="/posts/2014-03-15-caravans-parsing.html">Грабим корованы с Enlive, часть вторая</a></li>
+                        
+                        <li><a href="/posts/2014-02-24-enlive-caravans.html">Грабим корованы с Enlive, часть первая</a></li>
+                        
+                        <li><a href="/posts/2014-02-17-incanter-intro.html">Incanter and the Bears</a></li>
+                        
+                    </ul>
+                </div>
+                
+                
+                <div id="tags">
+                    <h3>Tags</h3>
+                    <ul>
+                        
+                        <li><a href="/tags/clojure.html">clojure</a></li>
+                        
+                    </ul>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <footer>Copyright &copy; 2015 glorphindale
+        <p style="text-align: center;">Powered by <a href="http://cryogenweb.org">Cryogen</a></p></footer>
+</div>
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="../js/highlight.pack.js" type="text/javascript"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>

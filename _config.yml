@@ -1,6 +1,0 @@
-name: Bearing Clojure / Медвекложа
-markdown: redcarpet
-pygments: true
-include: [ images ]
-encoding: UTF-8
-safe: true

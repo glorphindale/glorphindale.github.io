@@ -1,0 +1,529 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rss version='2.0' xmlns:atom='http://www.w3.org/2005/Atom'>
+<channel>
+<atom:link href='http://glorphindale.github.io/' rel='self' type='application/rss+xml'/>
+<generator>
+clj-rss
+</generator>
+<title>
+Bearing Clojure / Медвекложа
+</title>
+<link>
+http://glorphindale.github.io/
+</link>
+<description>
+Кложа и медведи
+</description>
+<lastBuildDate>
+Thu, 02 Jul 2015 22:52:29 +0700
+</lastBuildDate>
+<item>
+<guid>
+http://glorphindale.github.io/posts/2014-06-29-quil-math.html
+</guid>
+<link>
+http://glorphindale.github.io/posts/2014-06-29-quil-math.html
+</link>
+<title>
+quil, sin и cos
+</title>
+<description>
+&lt;p&gt;Как нарисовать круг на Кложе? Этим непростым вопросом вот уже несколько лет мучают себя последователи Рича Хики. Сегодня мы не только ответим на этот волнующий многих вопрос с помощью LightTable, но и увидим красоту синусов и косинусов.&lt;/p&gt;&lt;p&gt;Для начала нам понадобится библиотека quil в project.clj&lt;pre&gt;&lt;code&gt;&amp;#40;defproject visimath &amp;quot;0.1.0-SNAPSHOT&amp;quot;
+  :dependencies &amp;#91;&amp;#91;org.clojure/clojure &amp;quot;1.5.1&amp;quot;&amp;#93;
+                 &amp;#91;quil &amp;quot;2.1.0&amp;quot;&amp;#93;&amp;#93;&amp;#41;
+
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/quil/quil&quot;&gt;Quil&lt;/a/&gt; это обёртка над &lt;a href=&quot;http://processing.org/&quot;&gt;Processing&lt;/a&gt;, языком и средой для быстрого создания всяческих набросков и визуализаций.&lt;/p&gt;&lt;p&gt;Нарисуем круг, поменяем src/visimath/circles.clj на:&lt;pre&gt;&lt;code&gt;&amp;#40;ns visimath.circles
+  &amp;#40;:require &amp;#91;quil.core :as qc&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;defn draw &amp;#91;&amp;#93;&amp;#41;
+
+&amp;#40;defn setup &amp;#91;&amp;#93;
+  &amp;#40;qc/background 0&amp;#41;
+  &amp;#40;qc/ellipse 200 200 100 100&amp;#41;&amp;#41;
+
+&amp;#40;qc/defsketch circles
+  :title &amp;quot;Circles&amp;quot;
+  :size &amp;#91;400 400&amp;#93;
+  :draw draw
+  :setup setup
+  :renderer :opengl&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt; И нажмём Ctrl+Shift+Enter. LightTable запустит процесс с Clojure, установит с ним соединение, выкачает все необходимые библиотеки и вычислить всё содержимое файла. Quil запустит набросок circles с размером экрана 400 на 400 пикселей, именем окна &quot;Circles&quot;, один раз выполнит функцию setup, после чего будет периодически вызывать функцию draw. Результатом будет красивый белый круг на чёрном фоне. &lt;center&gt;&lt;img src=&quot;/posts/quil-math/1-circle.png&quot; alt=&quot;Circle&quot;&gt;&lt;/center&gt;&lt;/p&gt;&lt;p&gt;Смысл жизни найден, на этом можно закончить.&lt;/p&gt;&lt;p&gt;Но мы пойдём дальше. Одна из прелестей разработки через REPL &amp;mdash; возможность на лету менять работающую программу. Не закрывая окна с кругом поменяем содержимое функции draw на&lt;pre&gt;&lt;code&gt;&amp;#40;defn draw &amp;#91;&amp;#93;
+  &amp;#40;qc/rect 100 100 100 100&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt; и отправим её в REPL, нажав Ctrl+Shift с курсором на одной из строк этой функции. Получим на экране ещё и квадрат. Теперь мы можем, без рекомпиляции и перезапуска, простым изменением содержимого функции экспериментировать с решением нашей задачи.&lt;/p&gt;&lt;p&gt;Наша задача теперь &amp;mdash; нарисовать бегающую по кругу точку. Для этого содержимое функции setup мы поменяем на:&lt;pre&gt;&lt;code&gt;&amp;#40;defn setup &amp;#91;&amp;#93;
+  &amp;#40;qc/smooth&amp;#41;
+  &amp;#40;qc/frame-rate 30&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt; и отправим её в REPL. С картинкой ничего не произошло. Почему? Функция setup выполняется только на старте наброска. Для подхвата изменений нам придётся закрыть старый набросок и ещё раз отправить defsketch в REPL. На экране появился набросок с квадратом. Чтобы не перезапускать программу, рекомендуется в setup оставлять только настройку общих параметров приложения, таких как сглаживание (smooth), количество кадров в секунду (frame-rate) и так далее.&lt;/p&gt;&lt;p&gt;Информационное отступление: если в процессе работы с библиотекой quil (да и с любой другой) возникают вопросы по документации конкретной функции, можно нажать Ctrl+D с курсором на этой функции, и LightTable покажет всё что о ней знает. &lt;center&gt;&lt;img src=&quot;/posts/quil-math/2-help.png&quot; alt=&quot;Help&quot;&gt;&lt;/center&gt;&lt;/p&gt;&lt;p&gt;Добавим немного движения и цвета в наш чёрно-белый мир:&lt;pre&gt;&lt;code&gt;&amp;#40;defn draw &amp;#91;&amp;#93;
+  &amp;#40;qc/background 0&amp;#41;
+  &amp;#40;let &amp;#91;ts &amp;#40;rem &amp;#40;qc/frame-count&amp;#41; 255&amp;#41;&amp;#93;
+    &amp;#40;qc/fill ts &amp;#40;- 255 ts&amp;#41; 0&amp;#41;
+    &amp;#40;qc/rect &amp;#40;+ ts 25&amp;#41; 100 100 100&amp;#41;&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Теперь у нас есть бегающий разноцветный квадрат. Если цвета всё ещё мало &amp;mdash; можно удалить строку qc/background. Почему так происходит? Вызов qc/background заполняет весь кадр указанным цветом. Если этого вызова нет, Quil рисует новый кадр поверх старого. &lt;center&gt;&lt;img src=&quot;/posts/quil-math/3-colors.png&quot; alt=&quot;Colors&quot;&gt;&lt;/center&gt;&lt;/p&gt;&lt;p&gt;Информационное отступление: одним из самых мощных средств отладки в LightTable являются watches(наблюдатели). Наблюдателя можно поставить на символ, например, в теле формы let (но не в векторе связывания). Для этого надо навести курсор на сивмол, и, либо нажать Alt+D, либо, вызвав командную панель через Ctrl+Space выбрать Editor: Watch selection. Теперь LightTable обернёт этот сивмол в свой код, и при изменении его в работающем процессе, значение будет отправлено в LightTable и выведено в строке, где поставлен наблюдатель. Можно попробовать на строке (qc/fill ts (- 255 ts) 0), установив курсор на первое упоминание ts. В конце строки появится постоянно меняющееся значение. (см. предыдущую картинку)&lt;/p&gt;&lt;p&gt;Бегающие разноцветные квадраты это хорошо, но нам нужна окружность. Для этого нужна функция, которая по текущем номеру кадра будет выдавать позицию точки на окружности, плюс поменяется функция отрисовки:&lt;pre&gt;&lt;code&gt;&amp;#40;defn deg-&amp;gt;pos &amp;#91;radius deg&amp;#93;
+  &amp;#40;let &amp;#91;rads &amp;#40;qc/radians deg&amp;#41;
+        posx &amp;#40;&amp;#42; radius &amp;#40;Math/cos rads&amp;#41;&amp;#41;
+        posy &amp;#40;&amp;#42; radius &amp;#40;Math/sin rads&amp;#41;&amp;#41;&amp;#93;
+    &amp;#91;posx posy&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;defn draw &amp;#91;&amp;#93;
+  &amp;#40;qc/background 0&amp;#41;
+  &amp;#40;let &amp;#91;ts &amp;#40;rem &amp;#40;qc/frame-count&amp;#41; 360&amp;#41;
+        &amp;#91;posx posy&amp;#93; &amp;#40;deg-&amp;gt;pos 100 ts&amp;#41;&amp;#93;
+    &amp;#40;qc/ellipse posx posy 5 5&amp;#41;&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Точка рисует только четверть окружности: посмотрев через наблюдателя на значение posx в вызове qc/ellipse можно увидеть координаты от -100 до 100. Можно добавить смещение прямо в функцию deg-&gt;pos, но это сильно повредит возможностям использования этой функции в других местах проекта. Поэтому возьмём макрос qc/with-translation, который сместит начало координат на указанный вектор для всех операция в теле макроса, а после окончания этих операция вернёт всё на место:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;defn setup &amp;#91;&amp;#93;
+  &amp;#40;qc/smooth&amp;#41;
+  &amp;#40;qc/no-stroke&amp;#41;
+  &amp;#40;qc/background 0&amp;#41;
+  &amp;#40;qc/frame-rate 30&amp;#41;&amp;#41;
+
+&amp;#40;defn draw &amp;#91;&amp;#93;
+  &amp;#40;let &amp;#91;ts &amp;#40;rem &amp;#40;qc/frame-count&amp;#41; 360&amp;#41;
+        &amp;#91;posx posy&amp;#93; &amp;#40;deg-&amp;gt;pos 100 ts&amp;#41;&amp;#93;
+    &amp;#40;qc/with-translation &amp;#91;&amp;#40;/ &amp;#40;qc/width&amp;#41; 2&amp;#41; &amp;#40;/ &amp;#40;qc/height&amp;#41; 2&amp;#41;&amp;#93;
+      &amp;#40;qc/ellipse posx posy 5 5&amp;#41;&amp;#41;&amp;#41;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Ctrl+Enter, и теперь по экрану точка выписывает окружность, а благодаря тому, что мы не вызываем в draw очистку экрана через qc/background, через некоторое время будет видна вся окружность. &lt;center&gt;&lt;img src=&quot;/posts/quil-math/4-circle.png&quot; alt=&quot;Circle&quot;&gt;&lt;/center&gt;&lt;/p&gt;&lt;p&gt;Самые пытливые спросят: а что, если поиграть коэффициентами аргументов синуса и косинуса?&lt;pre&gt;&lt;code&gt;&amp;#40;defn deg-&amp;gt;pos &amp;#91;radius deg&amp;#93;
+  &amp;#40;let &amp;#91;rads &amp;#40;qc/radians deg&amp;#41;
+        posx &amp;#40;&amp;#42; radius &amp;#40;Math/cos &amp;#40;&amp;#42; 3 rads&amp;#41;&amp;#41;&amp;#41;
+        posy &amp;#40;&amp;#42; radius &amp;#40;Math/sin &amp;#40;&amp;#42; 2 rads&amp;#41;&amp;#41;&amp;#41;&amp;#93;
+    &amp;#91;posx posy&amp;#93;&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;&lt;center&gt;&lt;img src=&quot;/posts/quil-math/5-koeff.png&quot; alt=&quot;Koeff&quot;&gt;&lt;/center&gt; Эффект интересный, но не очень удобно каждый раз править коэффициенты и вызывать qc/background 0 для очистки экрана. Добавим интерактивности, позволим управлять коэффициентами с помощью клавиш:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;ns visimath.circles
+  &amp;#40;:import &amp;#91;java.awt.event KeyEvent&amp;#93;&amp;#41;
+  &amp;#40;:require &amp;#91;quil.core :as qc&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;def state &amp;#40;atom {:sin 1 :cos 1}&amp;#41;&amp;#41;
+
+&amp;#40;defn deg-&amp;gt;pos &amp;#91;radius deg cos-k sin-k&amp;#93;
+  &amp;#40;let &amp;#91;rads &amp;#40;qc/radians &amp;#40;&amp;#42; 1 deg&amp;#41;&amp;#41;
+        posx &amp;#40;&amp;#42; radius &amp;#40;Math/cos &amp;#40;&amp;#42; cos-k rads&amp;#41;&amp;#41;&amp;#41;
+        posy &amp;#40;&amp;#42; radius &amp;#40;Math/sin &amp;#40;&amp;#42; sin-k rads&amp;#41;&amp;#41;&amp;#41;&amp;#93;
+    &amp;#91;posx posy&amp;#93;&amp;#41;&amp;#41;
+&amp;#40;def psize 10&amp;#41;
+
+&amp;#40;defn draw &amp;#91;&amp;#93;
+  &amp;#40;let &amp;#91;ts &amp;#40;rem &amp;#40;qc/frame-count&amp;#41; 360&amp;#41;
+        cos-k &amp;#40;@state :cos&amp;#41;
+        sin-k &amp;#40;@state :sin&amp;#41;
+        center-x &amp;#40;/ &amp;#40;qc/width&amp;#41; 2&amp;#41;
+        center-y &amp;#40;/ &amp;#40;qc/height&amp;#41; 2&amp;#41;
+        &amp;#91;posx posy&amp;#93; &amp;#40;deg-&amp;gt;pos 100 ts cos-k sin-k&amp;#41;&amp;#93;
+    
+    &amp;#40;qc/with-fill &amp;#91;255 25&amp;#93;
+      &amp;#40;qc/with-translation &amp;#91;center-x center-y&amp;#93;
+        &amp;#40;qc/ellipse posx posy psize psize&amp;#41;&amp;#41;&amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;defn key-pressed &amp;#91;&amp;#93;
+  &amp;#40;qc/background 0&amp;#41;
+  &amp;#40;cond
+   &amp;#40;= &amp;#40;qc/key-code&amp;#41; KeyEvent/VK&amp;#95;DOWN&amp;#41;
+      &amp;#40;swap! state update-in &amp;#91;:cos&amp;#93; dec&amp;#41;
+   &amp;#40;= &amp;#40;qc/key-code&amp;#41; KeyEvent/VK&amp;#95;UP&amp;#41;
+      &amp;#40;swap! state update-in &amp;#91;:cos&amp;#93; inc&amp;#41;
+   &amp;#40;= &amp;#40;qc/key-code&amp;#41; KeyEvent/VK&amp;#95;LEFT&amp;#41;
+      &amp;#40;swap! state update-in &amp;#91;:sin&amp;#93; dec&amp;#41;
+   &amp;#40;= &amp;#40;qc/key-code&amp;#41; KeyEvent/VK&amp;#95;RIGHT&amp;#41;
+      &amp;#40;swap! state update-in &amp;#91;:sin&amp;#93; inc&amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;qc/defsketch circles
+  :title &amp;quot;Circles&amp;quot;
+  :size &amp;#91;400 400&amp;#93;
+  :draw draw
+  :setup setup
+  :key-pressed key-pressed
+  :renderer :opengl&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Теперь по нажатию на стрелки будут меняться коэффициенты синуса и косинуса: &lt;center&gt;&lt;img src=&quot;/posts/quil-math/6-changes.png&quot; alt=&quot;Changes&quot;&gt;&lt;/center&gt;&lt;/p&gt;&lt;p&gt;Для большей наглядности можно рисовать отдельные части координаты точки:&lt;pre&gt;&lt;code&gt;&amp;#40;defn draw &amp;#91;&amp;#93;
+  &amp;#40;let &amp;#91;ts &amp;#40;rem &amp;#40;qc/frame-count&amp;#41; 360&amp;#41;
+        cos-k &amp;#40;@state :cos&amp;#41;
+        sin-k &amp;#40;@state :sin&amp;#41;
+        center-x &amp;#40;/ &amp;#40;qc/width&amp;#41; 2&amp;#41;
+        center-y &amp;#40;/ &amp;#40;qc/height&amp;#41; 2&amp;#41;
+        &amp;#91;posx posy&amp;#93; &amp;#40;deg-&amp;gt;pos 100 ts cos-k sin-k&amp;#41;&amp;#93;
+    
+    &amp;#40;qc/with-fill &amp;#91;0 10&amp;#93;
+      &amp;#40;qc/rect 0 15 &amp;#40;qc/width&amp;#41; 35&amp;#41;
+      &amp;#40;qc/rect 15 0 35 &amp;#40;qc/height&amp;#41;&amp;#41;&amp;#41;
+    
+    &amp;#40;qc/with-fill &amp;#91;255 25&amp;#93;
+      &amp;#40;qc/with-translation &amp;#91;center-x center-y&amp;#93;
+        &amp;#40;qc/ellipse posx posy psize psize&amp;#41;&amp;#41;
+      &amp;#40;qc/with-translation &amp;#91;center-x 20&amp;#93;
+        &amp;#40;qc/ellipse posx 20 psize psize&amp;#41;&amp;#41;
+      &amp;#40;qc/with-translation &amp;#91;20 center-y&amp;#93;
+        &amp;#40;qc/ellipse 20 posy psize psize&amp;#41;&amp;#41;&amp;#41;
+    &amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Текущее состояние можно взять в &lt;a href='https://gist.github.com/glorphindale/1b97f91d101e888c1541'&gt;гисте&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Следующий щаг в исследовании синусов и косинусов &amp;mdash; увидеть все комбинации сразу:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;defn deg-&amp;gt;pos &amp;#91;radius deg cos-k sin-k&amp;#93;
+  &amp;#40;let &amp;#91;rads &amp;#40;qc/radians deg&amp;#41;
+        posx &amp;#40;&amp;#42; radius &amp;#40;Math/cos &amp;#40;&amp;#42; cos-k rads&amp;#41;&amp;#41;&amp;#41;
+        posy &amp;#40;&amp;#42; radius &amp;#40;Math/sin &amp;#40;&amp;#42; sin-k rads&amp;#41;&amp;#41;&amp;#41;&amp;#93;
+    &amp;#91;posx posy&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;def psize 3&amp;#41;
+&amp;#40;def radius 30&amp;#41;
+
+&amp;#40;defn draw &amp;#91;&amp;#93;
+  &amp;#40;let &amp;#91;frame &amp;#40;qc/frame-count&amp;#41;
+        ts &amp;#40;rem frame 360&amp;#41;
+        color &amp;#40;rem frame 256&amp;#41;&amp;#93;
+    
+    &amp;#40;qc/no-stroke&amp;#41;
+    &amp;#40;doseq &amp;#91;x &amp;#40;range 1 9&amp;#41; y &amp;#40;range 1 9&amp;#41;&amp;#93;
+      &amp;#40;let &amp;#91;&amp;#91;posx posy&amp;#93; &amp;#40;deg-&amp;gt;pos radius ts x y&amp;#41;&amp;#93;
+        &amp;#40;qc/with-translation &amp;#91;&amp;#40;&amp;#42; x 3 radius&amp;#41; &amp;#40;&amp;#42; y 3 radius&amp;#41;&amp;#93;
+          &amp;#40;qc/with-fill &amp;#91;100 100 255 25&amp;#93;
+            &amp;#40;qc/ellipse posx posy psize psize&amp;#41;&amp;#41;&amp;#41;&amp;#41;&amp;#41;&amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;defn setup &amp;#91;&amp;#93;
+  &amp;#40;qc/smooth&amp;#41;
+  &amp;#40;qc/no-stroke&amp;#41;
+  &amp;#40;qc/background 0&amp;#41;
+  &amp;#40;qc/frame-rate 60&amp;#41;&amp;#41;
+
+&amp;#40;defn key-pressed &amp;#91;&amp;#93;
+  &amp;#40;qc/background 0&amp;#41;&amp;#41;
+
+&amp;#40;qc/defsketch circles
+  :title &amp;quot;Circles&amp;quot;
+  :size &amp;#91;800 800&amp;#93;
+  :draw draw
+  :setup setup
+  :key-pressed key-pressed
+  :renderer :opengl&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;С высоты птичьего полёта можно увидеть много интересного: &lt;center&gt;&lt;img width=&quot;750&quot; src=&quot;/posts/quil-math/7-all-big.png&quot; alt=&quot;All the circles&quot;&gt;&lt;/center&gt;&lt;/p&gt;&lt;p&gt;&quot;Поиграв с коэффициентами&quot; в формуле (&lt;em&gt; cos-k (&lt;/em&gt; 1.5 rads)) можно получить много других интересных форм: &lt;center&gt;&lt;img width=&quot;750&quot; src=&quot;/posts/quil-math/8-others.png&quot; alt=&quot;Other circles&quot;&gt;&lt;/center&gt;&lt;/p&gt;&lt;p&gt;Подведём итог: Кложа рулит.&lt;/p&gt;&lt;p&gt;Полный файл с кодом можно взять &lt;a href='https://github.com/glorphindale/visimath/blob/master/src/visimath/circles.clj'&gt;на GitHub&lt;/a&gt;.&lt;/p&gt;
+</description>
+<pubDate>
+Sun, 29 Jun 2014 00:00:00 +0700
+</pubDate>
+</item>
+<item>
+<guid>
+http://glorphindale.github.io/posts/2014-03-15-caravans-parsing.html
+</guid>
+<link>
+http://glorphindale.github.io/posts/2014-03-15-caravans-parsing.html
+</link>
+<title>
+Грабим корованы с Enlive, часть вторая
+</title>
+<description>
+&lt;p&gt;В прошлый раз мы остановились на том, что получили сырые данные об участниках Codefest 2013. Чтобы можно было построить сколько-нибудь полезную статистику нам придётся сырые данные немного потушить до готовности.&lt;/p&gt;&lt;p&gt;Начнём с простого &amp;mdash; преобразуем имена в пол. Уникальных имён у нас всего 192:&lt;pre&gt;&lt;code&gt;&amp;#40;def data &amp;#40;chesh/parse-string &amp;#40;slurp &amp;quot;codefest-2013-raw.json&amp;quot;&amp;#41; true&amp;#41;&amp;#41;
+
+&amp;#40;defn person-&amp;gt;name &amp;#91;person&amp;#93;
+  &amp;#40;-&amp;gt; person
+      first
+      &amp;#40;string/split #&amp;quot; &amp;quot; 2&amp;#41;
+      first
+      string/lower-case&amp;#41;&amp;#41;
+
+&amp;#40;def all-names &amp;#40;set &amp;#40;map person-&amp;gt;name data&amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;count all-names&amp;#41; ;; 192
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Попробуем написать правила преобразования:&lt;pre&gt;&lt;code&gt;&amp;#40;defn name-&amp;gt;sex &amp;#91;name&amp;#93;
+  &amp;#40;let &amp;#91;letter &amp;#40;last name&amp;#41;&amp;#93;
+    &amp;#40;cond
+     &amp;#40;#{&amp;quot;данила&amp;quot; &amp;quot;тема&amp;quot; &amp;quot;илья&amp;quot; &amp;quot;тёма&amp;quot; &amp;quot;гриша&amp;quot; &amp;quot;никита&amp;quot; &amp;quot;юра&amp;quot; &amp;quot;nikita&amp;quot; &amp;quot;саша&amp;quot; &amp;quot;женя&amp;quot;} name&amp;#41; &amp;#91;name &amp;quot;m&amp;quot;&amp;#93;
+     &amp;#40;#{\a \а \я} letter&amp;#41; &amp;#91;name &amp;quot;f&amp;quot;&amp;#93;
+     &amp;#40;#{\н \й \р \r \n \л \с \в \п \д \x \w \m \s \y \l \м \т \ь \о \г \б \к \i \d \e \k} letter&amp;#41; &amp;#91;name &amp;quot;m&amp;quot;&amp;#93;
+     :default &amp;#91;name &amp;quot;?&amp;quot;&amp;#93;
+     &amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;frequencies &amp;#40;map second &amp;#40;map name-&amp;gt;sex all-names&amp;#41;&amp;#41;&amp;#41;
+;; {\f 75, \m 117}
+
+&amp;#40;defn person-&amp;gt;sex &amp;#91;person&amp;#93;
+  &amp;#40;-&amp;gt; person person-&amp;gt;name name-&amp;gt;sex&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Теперь попробуем уменьшить количество должностей, возьмём список преобразований из парсера 2012 года:&lt;pre&gt;&lt;code&gt;&amp;#40;defn person-&amp;gt;position &amp;#91;person&amp;#93;
+  &amp;#40;-&amp;gt; person
+      &amp;#40;#&amp;#40;if &amp;#40;nth % 2&amp;#41; &amp;#40;nth % 2&amp;#41; &amp;quot;&amp;quot;&amp;#41;&amp;#41;
+      string/lower-case&amp;#41;&amp;#41;
+
+&amp;#40;def all-positions &amp;#40;set &amp;#40;map person-&amp;gt;position data&amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;count all-positions&amp;#41; ;; 569
+
+&amp;#40;defn string-contains? &amp;#91;s vars&amp;#93;
+  &amp;#40;seq &amp;#40;filter true? &amp;#40;map #&amp;#40;.contains s %&amp;#41; vars&amp;#41;&amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;defn simplify-position &amp;#91;position&amp;#93;
+  &amp;#40;cond
+   &amp;#40;string-contains? position #{&amp;quot;hr&amp;quot; &amp;quot;персонал&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;hr&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;дизайнер&amp;quot; &amp;quot;ui&amp;quot; &amp;quot;интерф&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;designer&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;director&amp;quot; &amp;quot;директор&amp;quot; &amp;quot;manager&amp;quot; &amp;quot;начальник&amp;quot; &amp;quot;pm&amp;quot; &amp;quot;leader&amp;quot; &amp;quot;менеджер&amp;quot;
+            &amp;quot;руководитель&amp;quot; &amp;quot;lead&amp;quot; &amp;quot;лидер&amp;quot; &amp;quot;рук.&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;mgmt&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;qa&amp;quot; &amp;quot;тестирован&amp;quot; &amp;quot;качеств&amp;quot; &amp;quot;test&amp;quot; &amp;quot;тестировщик&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;qa&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;аналитик&amp;quot; &amp;quot;архи&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;analysis&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;developer&amp;quot; &amp;quot;разработчик&amp;quot; &amp;quot;программист&amp;quot; &amp;quot;engineer&amp;quot; &amp;quot;rnd&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;developer&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;админ&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;admin&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;студент&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;student&amp;quot;&amp;#93;
+   :default &amp;#91;position &amp;quot;na&amp;quot;&amp;#93;
+   &amp;#41;&amp;#41;
+
+&amp;#40;frequencies &amp;#40;map second &amp;#40;map simplify-position all-positions&amp;#41;&amp;#41;&amp;#41;
+;; {&amp;quot;mgmt&amp;quot; 182, &amp;quot;hr&amp;quot; 14, &amp;quot;developer&amp;quot; 118, &amp;quot;designer&amp;quot; 23, &amp;quot;admin&amp;quot; 8,
+;;  &amp;quot;qa&amp;quot; 51, &amp;quot;student&amp;quot; 2, &amp;quot;analysis&amp;quot; 13, &amp;quot;?&amp;quot; 158}
+
+&amp;#40;defn person-&amp;gt;simple-position &amp;#91;person&amp;#93;
+  &amp;#40;-&amp;gt; person person-&amp;gt;position simplify-position&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Приступим к тяжёлому труду разгребателя данных из интернетов:&lt;pre&gt;&lt;code&gt;&amp;#40;filter #&amp;#40;= &amp;#40;second %&amp;#41; &amp;quot;?&amp;quot;&amp;#41; &amp;#40;map simplify-position all-positions&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;&amp;quot; &amp;quot;?&amp;quot;&amp;#93; &amp;#91;&amp;quot;технический продюсер&amp;quot; &amp;quot;?&amp;quot;&amp;#93; &amp;#91;&amp;quot;верстальщик xaml&amp;quot; &amp;quot;?&amp;quot;&amp;#93; &amp;#91;&amp;quot;ios, android, techdoc&amp;quot; &amp;quot;?&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;sdet&amp;quot; &amp;quot;?&amp;quot;&amp;#93; &amp;#91;&amp;quot;n/a&amp;quot; &amp;quot;?&amp;quot;&amp;#93; &amp;#91;&amp;quot;многостаночник&amp;quot; &amp;quot;?&amp;quot;&amp;#93; &amp;#91;&amp;quot;главный за тех. поддержку продуктов&amp;quot; &amp;quot;?&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;гендир&amp;quot; &amp;quot;?&amp;quot;&amp;#93; &amp;#91;&amp;quot;llc, lowlevel optimizations voodoo&amp;quot; &amp;quot;?&amp;quot;&amp;#93; &amp;#91;&amp;quot;главный&amp;quot; &amp;quot;?&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;сотрудник компании&amp;quot; &amp;quot;?&amp;quot;&amp;#93; &amp;#91;&amp;quot;junior game designer&amp;quot; &amp;quot;?&amp;quot;&amp;#93;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Люди крайне творчески подошли к задаче указания своей должности, отфильтруем данные в первом приближении:&lt;pre&gt;&lt;code&gt;
+&amp;#40;defn simplify-position &amp;#91;position&amp;#93;
+  &amp;#40;cond
+   &amp;#40;string-contains? position #{&amp;quot;hr&amp;quot; &amp;quot;персонал&amp;quot; &amp;quot;алексей сухоруков&amp;quot; &amp;quot;людям&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;hr&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;дизайнер&amp;quot; &amp;quot;ui&amp;quot; &amp;quot;интерф&amp;quot; &amp;quot;designer&amp;quot; &amp;quot;ux&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;designer&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;director&amp;quot; &amp;quot;директор&amp;quot; &amp;quot;manager&amp;quot; &amp;quot;начальник&amp;quot; &amp;quot;pm&amp;quot; &amp;quot;cio&amp;quot;
+                                &amp;quot;leader&amp;quot; &amp;quot;менеджер&amp;quot; &amp;quot;руководит&amp;quot; &amp;quot;lead&amp;quot; &amp;quot;лидер&amp;quot; &amp;quot;cto&amp;quot; &amp;quot;boss&amp;quot;
+                                &amp;quot;рук.&amp;quot; &amp;quot;владелец&amp;quot; &amp;quot;ceo&amp;quot; &amp;quot;главный&amp;quot; &amp;quot;лид&amp;quot; &amp;quot;chief&amp;quot; &amp;quot;пм&amp;quot; &amp;quot;mgr&amp;quot;
+                                &amp;quot;управля&amp;quot; &amp;quot;гендир&amp;quot; &amp;quot;vp&amp;quot; &amp;quot;соучре&amp;quot; &amp;quot;управл&amp;quot; &amp;quot;coo&amp;quot; &amp;quot;партнер&amp;quot; &amp;quot;head&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;mgmt&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;qa&amp;quot; &amp;quot;тестирован&amp;quot; &amp;quot;качеств&amp;quot; &amp;quot;test&amp;quot; &amp;quot;тестировщик&amp;quot; &amp;quot;поняша&amp;quot;
+                                &amp;quot;тестер&amp;quot; &amp;quot;sdet&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;qa&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;аналитик&amp;quot; &amp;quot;архи&amp;quot; &amp;quot;architect&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;analysis&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;developer&amp;quot; &amp;quot;разработчик&amp;quot; &amp;quot;программист&amp;quot; &amp;quot;програмист&amp;quot;
+                                &amp;quot;engineer&amp;quot; &amp;quot;rnd&amp;quot; &amp;quot;инженер&amp;quot; &amp;quot;program&amp;quot;
+                                &amp;quot;android&amp;quot; &amp;quot;java&amp;quot; &amp;quot;scala&amp;quot; &amp;quot;javascript&amp;quot; &amp;quot;sde&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;developer&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;админ&amp;quot; &amp;quot;admin&amp;quot; &amp;quot;devops&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;admin&amp;quot;&amp;#93;
+   &amp;#40;string-contains? position #{&amp;quot;студент&amp;quot;}&amp;#41; &amp;#91;position &amp;quot;student&amp;quot;&amp;#93;
+   :default &amp;#91;position &amp;quot;na&amp;quot;&amp;#93;
+   &amp;#41;&amp;#41;
+
+&amp;#40;frequencies &amp;#40;map second &amp;#40;map simplify-position all-positions&amp;#41;&amp;#41;&amp;#41;
+;; {&amp;quot;mgmt&amp;quot; 224, &amp;quot;hr&amp;quot; 16, &amp;quot;developer&amp;quot; 132, &amp;quot;designer&amp;quot; 27, &amp;quot;admin&amp;quot; 10, &amp;quot;qa&amp;quot; 53, &amp;quot;na&amp;quot; 92, &amp;quot;student&amp;quot; 2, &amp;quot;analysis&amp;quot; 13}
+
+&amp;#40;filter #&amp;#40;= &amp;#40;second %&amp;#41; &amp;quot;na&amp;quot;&amp;#41; &amp;#40;map simplify-position all-positions&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;технический продюсер&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;верстальщик xaml&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;n/a&amp;quot; &amp;quot;na&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;многостаночник&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;llc, lowlevel optimizations voodoo&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;сотрудник компании&amp;quot; &amp;quot;na&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;business analyst&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;бухгалтер&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;разнорабочий&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;манагер праэктаф&amp;quot; &amp;quot;na&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;практикант-магистр группы разработки по&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;патентный поверенный&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;#####&amp;quot; &amp;quot;na&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;мп&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;html-coder&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;фронтэндир&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;ассистент департамента&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;строитель звезды смерти&amp;quot; &amp;quot;na&amp;quot;&amp;#93;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Дальше фильтровать смысла нет. Осталось разбить компании по размеру, для этого построим отображение &quot;схлопнутое имя компании&quot; &amp;#8594; &quot;примерный размер компании&quot;:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;def all-companies &amp;#40;map second data&amp;#41;&amp;#41;
+
+&amp;#40;defn simplify-company &amp;#91;company&amp;#93;
+  &amp;#40;cond
+   &amp;#40;#{&amp;quot;2gis&amp;quot;} company&amp;#41; &amp;quot;2гис&amp;quot;
+   &amp;#40;#{&amp;quot;ооо «компания холидей»&amp;quot;} company&amp;#41; &amp;quot;ооо \&amp;quot;компания холидей\&amp;quot;&amp;quot;
+   &amp;#40;#{&amp;quot;playtox llc&amp;quot;} company&amp;#41; &amp;quot;playtox&amp;quot;
+   &amp;#40;#{&amp;quot;новео&amp;quot;} company&amp;#41; &amp;quot;noveo&amp;quot;
+   &amp;#40;#{&amp;quot;Кадровое Агентство Алексея Сухорукова&amp;quot;} company&amp;#41; &amp;quot;Alexey Suhorukov's Recruitment Agency&amp;quot;
+   :default company&amp;#41;&amp;#41;
+
+&amp;#40;defn bin-company &amp;#91;&amp;#91;c f&amp;#93;&amp;#93;
+  &amp;#40;cond
+   &amp;#40;&amp;lt; 0 f 2&amp;#41; {c &amp;quot;1&amp;quot;}
+   &amp;#40;&amp;lt; 1 f 6&amp;#41; {c &amp;quot;2-5&amp;quot;}
+   &amp;#40;&amp;lt; 5 f 11&amp;#41; {c &amp;quot;6-10&amp;quot;}
+   &amp;#40;&amp;lt; 10 f 16&amp;#41; {c &amp;quot;11-15&amp;quot;}
+   &amp;#40;&amp;lt; 15 f 21&amp;#41; {c &amp;quot;16-20&amp;quot;}
+   &amp;#40;&amp;lt; 20 f 51&amp;#41; {c &amp;quot;21-50&amp;quot;}
+   &amp;#40;&amp;lt; 50 f&amp;#41; {c &amp;quot;50+&amp;quot;}&amp;#41;&amp;#41;
+
+&amp;#40;def company-freqs
+  &amp;#40;-&amp;gt;&amp;gt; all-companies
+       &amp;#40;map simplify-company&amp;#41;
+       frequencies
+       &amp;#40;map bin-company&amp;#41;
+       &amp;#40;apply merge&amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;defn person-&amp;gt;company-size &amp;#91;person&amp;#93;
+  &amp;#40;-&amp;gt; person second simplify-company company-freqs&amp;#41;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Используя все полученные функции выполним итоговое преобразование:&lt;pre&gt;&lt;code&gt;&amp;#40;defn transform-person &amp;#91;person&amp;#93;
+  &amp;#91;&amp;#40;-&amp;gt; person person-&amp;gt;sex second&amp;#41; &amp;#40;person-&amp;gt;company-size person&amp;#41; &amp;#40;-&amp;gt; person person-&amp;gt;simple-position second&amp;#41;&amp;#93;&amp;#41;
+
+&amp;#40;map transform-person &amp;#40;take 15 data&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;m&amp;quot; &amp;quot;1&amp;quot; &amp;quot;developer&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;1&amp;quot; &amp;quot;mgmt&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;1&amp;quot; &amp;quot;mgmt&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;1&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;2-5&amp;quot; &amp;quot;developer&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;f&amp;quot; &amp;quot;16-20&amp;quot; &amp;quot;mgmt&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;26-50&amp;quot; &amp;quot;mgmt&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;2-5&amp;quot; &amp;quot;mgmt&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;1&amp;quot; &amp;quot;mgmt&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;50+&amp;quot; &amp;quot;qa&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;f&amp;quot; &amp;quot;1&amp;quot; &amp;quot;na&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;50+&amp;quot; &amp;quot;qa&amp;quot;&amp;#93; &amp;#91;&amp;quot;f&amp;quot; &amp;quot;2-5&amp;quot; &amp;quot;designer&amp;quot;&amp;#93; &amp;#91;&amp;quot;m&amp;quot; &amp;quot;50+&amp;quot; &amp;quot;qa&amp;quot;&amp;#93; &amp;#91;&amp;quot;f&amp;quot; &amp;quot;6-10&amp;quot; &amp;quot;na&amp;quot;&amp;#93;&amp;#41;
+&amp;#40;def transformed-data &amp;#40;map transform-person data&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Теперь нужно схлопнуть данные и привести их к формату:&lt;pre&gt;&lt;code&gt;var raw&amp;#95;data = &amp;#91;{&amp;quot;sex&amp;quot;: &amp;quot;m&amp;quot;, &amp;quot;company&amp;quot;: &amp;quot;50+&amp;quot;, &amp;quot;position&amp;quot;: &amp;quot;admin&amp;quot;, &amp;quot;amount&amp;quot;: 5},
+                {&amp;quot;sex&amp;quot;: &amp;quot;f&amp;quot;, &amp;quot;company&amp;quot;: &amp;quot;1&amp;quot;, &amp;quot;position&amp;quot;: &amp;quot;designer&amp;quot;, &amp;quot;amount&amp;quot;: 1}&amp;#93;;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Для этого у нас есть прекрасная функция frequencies:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;def freqs &amp;#40;frequencies transformed-data&amp;#41;&amp;#41;
+;; {&amp;#91;&amp;quot;m&amp;quot; &amp;quot;6-10&amp;quot; &amp;quot;developer&amp;quot;&amp;#93; 99, &amp;#91;&amp;quot;f&amp;quot; &amp;quot;16-20&amp;quot; &amp;quot;mgmt&amp;quot;&amp;#93; 6, &amp;#91;&amp;quot;m&amp;quot; &amp;quot;6-10&amp;quot; &amp;quot;hr&amp;quot;&amp;#93; 1, &amp;#91;&amp;quot;f&amp;quot; &amp;quot;50+&amp;quot; &amp;quot;designer&amp;quot;&amp;#93; 1,
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Приведём к окончательному виду:&lt;pre&gt;&lt;code&gt;
+&amp;#40;defn finalize &amp;#91;&amp;#91;&amp;#91;sex company position&amp;#93; v&amp;#93;&amp;#93;
+  {&amp;quot;sex&amp;quot; sex &amp;quot;company&amp;quot; company &amp;quot;position&amp;quot; position &amp;quot;amount&amp;quot; v}&amp;#41;
+
+&amp;#40;def result
+  &amp;#40;str &amp;quot;var raw&amp;#95;data =&amp;quot;
+    &amp;#40;chesh/generate-string
+     &amp;#40;map finalize freqs&amp;#41;&amp;#41;
+    &amp;quot;;&amp;quot;&amp;#41;&amp;#41;
+
+&amp;#40;spit &amp;quot;codefest-2013.json&amp;quot; result&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Итог: &lt;center&gt;&lt;img width=&quot;750&quot; src=&quot;/posts/caravans-parsing/codefest-2013-result.png&quot; alt=&quot;Histogram&quot; width=&quot;800&quot;&gt;&lt;/center&gt;&lt;/p&gt;&lt;p&gt;Полный файл с кодом можно взять &lt;a href='https://gist.github.com/glorphindale/9646119'&gt;на GitHub&lt;/a&gt;.&lt;/p&gt;
+</description>
+<pubDate>
+Sat, 15 Mar 2014 00:00:00 +0700
+</pubDate>
+</item>
+<item>
+<guid>
+http://glorphindale.github.io/posts/2014-02-24-enlive-caravans.html
+</guid>
+<link>
+http://glorphindale.github.io/posts/2014-02-24-enlive-caravans.html
+</link>
+<title>
+Грабим корованы с Enlive, часть первая
+</title>
+<description>
+&lt;p&gt;Для своего проекта &lt;a href='https://github.com/glorphindale/codefest-stats'&gt; Codefest Stats 2012 &lt;/a&gt; мне понадобились данные по зарегистрированным участникам. Попробуем с помощью LightTable и &lt;a href='https://github.com/cgrand/enlive'&gt;Enlive&lt;/a&gt; пограбить &lt;a href='http://2013.codefest.ru/members/'&gt; данные за 2013 год &lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Понадобится чистый проект c именем enlive-examples.&lt;/p&gt;&lt;p&gt;Нам понадобятся следующие зависимости в profile.clj:&lt;pre&gt;&lt;code&gt;:dependencies &amp;#91;&amp;#91;org.clojure/clojure &amp;quot;1.5.1&amp;quot;&amp;#93;
+               &amp;#91;enlive &amp;quot;1.1.5&amp;quot;&amp;#93;
+               &amp;#91;cheshire &amp;quot;5.3.1&amp;quot;&amp;#93;&amp;#93;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Подключим библиотеку enlive в core.clj:&lt;pre&gt;&lt;code&gt;&amp;#40;ns enlive-examples.core
+    &amp;#40;:require &amp;#91;net.cgrand.enlive-html :as html&amp;#93;&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Структура элемента, который мы будем выдёргивать, такая:&lt;pre&gt;&lt;code&gt;&amp;lt;li class=&amp;quot;b-peoples&amp;#95;&amp;#95;item&amp;quot;&amp;gt;
+    &amp;lt;span class=&amp;quot;b-peoples&amp;#95;&amp;#95;letter&amp;quot;&amp;gt;A&amp;lt;/span&amp;gt;
+    Peter Asanov
+    &amp;lt;span class=&amp;quot;b-peoples&amp;#95;&amp;#95;icons&amp;quot;&amp;gt;
+        &amp;lt;a href=&amp;quot;https://twitter.com/#!/leaxdc&amp;quot; title=&amp;quot;Twitter&amp;quot; target=&amp;quot;&amp;#95;blank&amp;quot; class=&amp;quot;icon icon&amp;#95;tw&amp;quot;&amp;gt;&amp;lt;/a&amp;gt;
+        &amp;lt;a href=&amp;quot;http://facebook.com/leaxdc&amp;quot; title=&amp;quot;Facebook&amp;quot; target=&amp;quot;&amp;#95;blank&amp;quot; class=&amp;quot;icon icon&amp;#95;fb&amp;quot;&amp;gt;&amp;lt;/a&amp;gt;
+        &amp;lt;a href=&amp;quot;http://www.linkedin.com/pub/peter-asanov/24/a08/568&amp;quot; title=&amp;quot;LinkedIn&amp;quot;
+            target=&amp;quot;&amp;#95;blank&amp;quot; class=&amp;quot;icon icon&amp;#95;ld&amp;quot;&amp;gt;&amp;lt;/a&amp;gt;
+    &amp;lt;/span&amp;gt;
+    &amp;lt;span class=&amp;quot;b-peoples&amp;#95;&amp;#95;company&amp;quot;&amp;gt;EMC, Sr. Developer&amp;lt;/span&amp;gt;
+&amp;lt;/li&amp;gt;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Нас интересуют: текстовое содержимое элемента &amp;lt;li&amp;gt;, и компания/должность участника.&lt;/p&gt;&lt;p&gt;Начнём с простого, как получить все поля компания/должность?&lt;/p&gt;&lt;pre&gt;&lt;code&gt;;; Выбрать все span с классом b-peoples&amp;#95;&amp;#95;company, которые лежат в li с классом b-peoples&amp;#95;&amp;#95;item
+&amp;#40;def selected
+  &amp;#40;html/select raw-data &amp;#91;:li.b-peoples&amp;#95;&amp;#95;item :&amp;gt; :span.b-peoples&amp;#95;&amp;#95;company&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;map html/text &amp;#40;take 5 selected&amp;#41;&amp;#41;
+;; &amp;#40;&amp;quot;EMC, Sr. Developer&amp;quot; &amp;quot;IndorSoft LLC, Project Manager&amp;quot; &amp;quot;Squzza Dev, CTO&amp;quot; &amp;quot;SoftService, web dev&amp;quot;
+;; &amp;quot;Softage, инженер-программист&amp;quot;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Совет дня: по нажатию Ctrl-D LightTable выдаст документацию по символу под курсором, в том числе и по функциям enlive.&lt;/p&gt;&lt;p&gt;Сами по себе нас компании не интересуют, нам нужно получить связку ФИО + компания/должность. Определим функцию, которая из элемента {% highlight html %}li class=&quot;b-peoples__item&quot;{% endhighlight %} достанет все нужные данные, и поменяем функцию выбора элементов:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;defn item-&amp;gt;pair &amp;#91;item&amp;#93;
+  &amp;#40;let &amp;#91;pname &amp;#40;-&amp;gt; item :content &amp;#40;nth 1&amp;#41; string/trim&amp;#41;
+        &amp;#91;pcomp ppos&amp;#93; &amp;#40;-&amp;gt; &amp;#40;html/select item &amp;#91;:span.b-peoples&amp;#95;&amp;#95;company html/text&amp;#93;&amp;#41;
+                         first
+                         &amp;#40;string/split #&amp;quot;,&amp;quot;&amp;#41;&amp;#41;&amp;#93;
+    &amp;#91;pname pcomp ppos&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;def selected
+  &amp;#40;html/select raw-data &amp;#91;:li.b-peoples&amp;#95;&amp;#95;item&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;doall &amp;#40;map item-&amp;gt;pair &amp;#40;take 3 selected&amp;#41;&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;Peter Asanov&amp;quot; &amp;quot;EMC&amp;quot; &amp;quot; Sr. Developer&amp;quot;&amp;#93; &amp;#91;&amp;quot;Serge Barannik&amp;quot; &amp;quot;IndorSoft LLC&amp;quot; &amp;quot; Project Manager&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;&amp;quot; &amp;quot;Squzza Dev&amp;quot; &amp;quot; CTO&amp;quot;&amp;#93;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Первые два элемента обработаны нормально, а в третьем что-то пошло не так. Методом внимательного взгляда обнаруживаем, что элемент&lt;pre&gt;&lt;code class=&quot;&lt;li&quot;&gt;class=&amp;quot;b-peoples&amp;#95;&amp;#95;item&amp;quot;&amp;gt;```
+имеет два вида &amp;amp;mdash; с первой буквой фамилии и тегом
+ &lt;/code&gt;&lt;/pre&gt;&lt;span class=&quot;b-peoples__letter&quot;&gt;``` и без. Простого способа доступиться до текстового узла с фамилией у enlive нет, поэтому придётся применить костыль (тем более, что мы делаем простой ограбитель, а не универсальное решение):&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;defn with-letter? &amp;#91;item&amp;#93;
+  &amp;#40;= &amp;#40;-&amp;gt; item :content &amp;#40;#&amp;#40;nth % 1&amp;#41;&amp;#41; :attrs :class&amp;#41;
+     &amp;quot;b-peoples&amp;#95;&amp;#95;letter&amp;quot;&amp;#41;&amp;#41;
+
+&amp;#40;defn item-&amp;gt;pair &amp;#91;item&amp;#93;
+  &amp;#40;let &amp;#91;index &amp;#40;if &amp;#40;with-letter? item&amp;#41; 2 0&amp;#41;
+        pname &amp;#40;-&amp;gt; item :content &amp;#40;nth index&amp;#41; string/trim&amp;#41;
+        &amp;#91;pcomp ppos&amp;#93; &amp;#40;-&amp;gt; &amp;#40;html/select item &amp;#91;:span.b-peoples&amp;#95;&amp;#95;company html/text&amp;#93;&amp;#41;
+                         first
+                         &amp;#40;string/split #&amp;quot;,&amp;quot; 2&amp;#41;&amp;#41;&amp;#93;
+    &amp;#91;pname pcomp ppos&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;doall &amp;#40;map item-&amp;gt;pair &amp;#40;take 5 selected&amp;#41;&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;Peter Asanov&amp;quot; &amp;quot;EMC&amp;quot; &amp;quot; Sr. Developer&amp;quot;&amp;#93; &amp;#91;&amp;quot;Serge Barannik&amp;quot; &amp;quot;IndorSoft LLC&amp;quot; &amp;quot; Project Manager&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;Rustam Baygulin&amp;quot; &amp;quot;Squzza Dev&amp;quot; &amp;quot; CTO&amp;quot;&amp;#93; &amp;#91;&amp;quot;Igor Dolgov&amp;quot; &amp;quot;SoftService&amp;quot; &amp;quot; web dev&amp;quot;&amp;#93;
+;;  &amp;#91;&amp;quot;Alexey Efimov&amp;quot; &amp;quot;Softage&amp;quot; &amp;quot; инженер-программист&amp;quot;&amp;#93;&amp;#41;
+
+&amp;#40;def raw-data &amp;#40;map item-&amp;gt;pair selected&amp;#41;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Теперь можно получить какие-нибудь интересные сведения:&lt;pre&gt;&lt;code&gt;&amp;#40;take 5 &amp;#40;frequencies &amp;#40;map first raw-data&amp;#41;&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;&amp;quot; 285&amp;#93; &amp;#91;&amp;quot;Денис Сандалов&amp;quot; 3&amp;#93; &amp;#91;&amp;quot;Дмитрий Турков&amp;quot; 3&amp;#93; &amp;#91;&amp;quot;Вадим Суворов&amp;quot; 3&amp;#93; &amp;#91;&amp;quot;Дмитрий Пашкевич&amp;quot; 3&amp;#93;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Мда. Опять не тот корован. Снова заберёмся в структуру документа:&lt;pre&gt;&lt;code&gt;&amp;lt;div data-role=&amp;quot;peoples-names&amp;quot; class=&amp;quot;b-peoples&amp;#95;&amp;#95;page&amp;quot; style=&amp;quot;display: block;&amp;quot;&amp;gt;
+&amp;lt;div data-role=&amp;quot;peoples-companies&amp;quot; class=&amp;quot;b-peoples&amp;#95;&amp;#95;page&amp;quot;&amp;gt;
+&amp;lt;div data-role=&amp;quot;peoples-cities&amp;quot; class=&amp;quot;b-peoples&amp;#95;&amp;#95;page&amp;quot;&amp;gt;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Правим селектор, выбираем только те&lt;pre&gt;&lt;code&gt;&amp;lt;li class=&amp;quot;b-peoples&amp;#95;&amp;#95;item&amp;quot;&amp;gt;
+которые принадлежат
+&amp;lt;div data-role=&amp;quot;peoples-names&amp;quot;&amp;gt;
+ &lt;/code&gt;&lt;/pre&gt; Для этого воспользуемся хитрым селектором:&lt;pre&gt;&lt;code&gt;&amp;#91;&amp;#91;:div &amp;#40;html/attr= :data-role &amp;quot;peoples-names&amp;quot;&amp;#41;&amp;#93; :li.b-peoples&amp;#95;&amp;#95;item&amp;#93;
+ &lt;/code&gt;&lt;/pre&gt; Что это такое? Первый элемент вектора говорит нам &quot;выбери div, у которого класс &amp;mdash; peoples-names&quot;, а второй &amp;mdash; &quot;у результата найди li с классом b-peoples_item&quot;.&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;def selected
+  &amp;#40;html/select raw-data &amp;#91;&amp;#91;:div &amp;#40;html/attr= :data-role &amp;quot;peoples-names&amp;quot;&amp;#41;&amp;#93; :li.b-peoples&amp;#95;&amp;#95;item&amp;#93;&amp;#41;&amp;#41;
+&amp;#40;count selected&amp;#41;
+;; 1514
+
+&amp;#40;def grouped-data &amp;#40;map item-&amp;gt;pair selected&amp;#41;&amp;#41;
+&amp;#40;take 5 &amp;#40;frequencies &amp;#40;map first grouped-data&amp;#41;&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;&amp;quot; 97&amp;#93; &amp;#91;&amp;quot;Денис Сандалов&amp;quot; 1&amp;#93; &amp;#91;&amp;quot;Дмитрий Турков&amp;quot; 1&amp;#93; &amp;#91;&amp;quot;Вадим Суворов&amp;quot; 1&amp;#93; &amp;#91;&amp;quot;Дмитрий Пашкевич&amp;quot; 1&amp;#93;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Уже лучше, но 97 пустых записей отделяют наши данные от официального числа участников в 1417 человек. Находим их:&lt;pre&gt;&lt;code&gt;&amp;#40;take 3 &amp;#40;filter &amp;#40;comp empty? first&amp;#41; grouped-data&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;&amp;quot; &amp;quot;Mirantis IT&amp;quot; &amp;quot; Software developer&amp;quot;&amp;#93; &amp;#91;&amp;quot;&amp;quot; &amp;quot;eBay&amp;quot; &amp;quot; Senior software engineer&amp;quot;&amp;#93; &amp;#91;&amp;quot;&amp;quot; &amp;quot;Badoo&amp;quot; nil&amp;#93;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Ага, у докладчиков свой собственный стиль тегов: имя обёрнуто в &amp;lt;a&amp;gt; Перетрясём преобразование элемента в человека:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;defn item-&amp;gt;name &amp;#91;item&amp;#93;
+  &amp;#40;if-let &amp;#91;href &amp;#40;first &amp;#40;html/select item &amp;#91;&amp;#91;:a &amp;#40;html/attr-starts :href &amp;quot;/speaker&amp;quot;&amp;#41;&amp;#93;&amp;#93;&amp;#41;&amp;#41;&amp;#93;
+    &amp;#40;-&amp;gt; href html/text&amp;#41;
+    &amp;#40;if &amp;#40;with-letter? item&amp;#41;
+      &amp;#40;-&amp;gt; item :content &amp;#40;nth 2&amp;#41; string/trim&amp;#41;
+      &amp;#40;-&amp;gt; item :content &amp;#40;nth 0&amp;#41; string/trim&amp;#41;&amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;defn item-&amp;gt;person &amp;#91;item&amp;#93;
+  &amp;#40;let &amp;#91;pname &amp;#40;item-&amp;gt;name item&amp;#41;
+        &amp;#91;pcomp ppos&amp;#93; &amp;#40;-&amp;gt; &amp;#40;html/select item &amp;#91;:span.b-peoples&amp;#95;&amp;#95;company html/text&amp;#93;&amp;#41;
+                         first
+                         &amp;#40;string/split #&amp;quot;,&amp;quot; 2&amp;#41;&amp;#41;&amp;#93;
+    &amp;#91;pname pcomp ppos&amp;#93;&amp;#41;&amp;#41;
+&amp;#40;def grouped-data &amp;#40;map item-&amp;gt;person selected&amp;#41;&amp;#41;
+
+&amp;#40;take 5 &amp;#40;filter &amp;#40;comp empty? first&amp;#41; grouped-data&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#41; пустых имён больше нет
+&amp;#40;take 15 &amp;#40;frequencies &amp;#40;map first grouped-data&amp;#41;&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;Денис Сандалов&amp;quot; 1&amp;#93; &amp;#91;&amp;quot;Дмитрий Турков&amp;quot; 1&amp;#93; &amp;#91;&amp;quot;Вадим Суворов&amp;quot; 1&amp;#93; &amp;#91;&amp;quot;Дмитрий Пашкевич&amp;quot; 1&amp;#93; ...
+
+&amp;#40;-&amp;gt;&amp;gt; grouped-data
+     &amp;#40;map second&amp;#41;
+     frequencies
+     &amp;#40;sort-by second&amp;#41;
+     reverse
+     &amp;#40;take 10&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;2ГИС&amp;quot; 122&amp;#93; &amp;#91;&amp;quot;Parallels&amp;quot; 61&amp;#93; &amp;#91;&amp;quot;Alawar Entertainment&amp;quot; 45&amp;#93; &amp;#91;&amp;quot;Сбербанк-Технологии&amp;quot; 26&amp;#93;
+;;  &amp;#91;&amp;quot;СКБ Контур&amp;quot; 25&amp;#93; &amp;#91;&amp;quot;Тамтэк&amp;quot; 23&amp;#93; &amp;#91;&amp;quot;ЦФТ&amp;quot; 21&amp;#93; &amp;#91;&amp;quot;Сигнатек&amp;quot; 19&amp;#93; &amp;#91;&amp;quot;Центр автоматизации энергосбережения&amp;quot; 19&amp;#93;
+;;  &amp;#91;&amp;quot;Softline&amp;quot; 17&amp;#93;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Наконец-то похоже на правду. Но сравнение по количеству людей с сайтом КотикФеста всё ещё даёт повод для грусти: например, &quot;Центр автоматизации энергосбережения&quot; на сайте представлен несколькими компаниями в разных написаниях.&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;defn item-&amp;gt;person &amp;#91;item&amp;#93;
+  &amp;#40;let &amp;#91;pname &amp;#40;item-&amp;gt;name item&amp;#41;
+        parts &amp;#40;-&amp;gt; &amp;#40;html/select item &amp;#91;:span.b-peoples&amp;#95;&amp;#95;company html/text&amp;#93;&amp;#41;
+                         first
+                         &amp;#40;string/split #&amp;quot;,&amp;quot; 2&amp;#41;&amp;#41;
+        &amp;#91;pcomp ppos&amp;#93; &amp;#40;-&amp;gt;&amp;gt; parts
+                          &amp;#40;map string/trim&amp;#41;
+                          &amp;#40;map string/lower-case&amp;#41;&amp;#41;&amp;#93;
+    &amp;#91;pname pcomp ppos&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;-&amp;gt;&amp;gt; grouped-data
+     &amp;#40;map second&amp;#41;
+     frequencies
+     &amp;#40;sort-by second&amp;#41;
+     reverse
+     &amp;#40;take 15&amp;#41;&amp;#41;
+;; &amp;#40;&amp;#91;&amp;quot;2гис&amp;quot; 122&amp;#93; &amp;#91;&amp;quot;parallels&amp;quot; 61&amp;#93; &amp;#91;&amp;quot;alawar entertainment&amp;quot; 45&amp;#93; &amp;#91;&amp;quot;сбербанк-технологии&amp;quot; 26&amp;#93;
+;;  &amp;#91;&amp;quot;скб контур&amp;quot; 25&amp;#93; &amp;#91;&amp;quot;центр автоматизации энергосбережения&amp;quot; 24&amp;#93; &amp;#91;&amp;quot;тамтэк&amp;quot; 23&amp;#93; &amp;#91;&amp;quot;цфт&amp;quot; 21&amp;#93;
+;;  &amp;#91;&amp;quot;сигнатек&amp;quot; 19&amp;#93; &amp;#91;&amp;quot;softline&amp;quot; 17&amp;#93; &amp;#91;&amp;quot;intel&amp;quot; 17&amp;#93; &amp;#91;&amp;quot;новотелеком&amp;quot; 16&amp;#93; &amp;#91;&amp;quot;ronas it&amp;quot; 16&amp;#93;
+;;  &amp;#91;&amp;quot;7bits&amp;quot; 14&amp;#93; &amp;#91;&amp;quot;нгс&amp;quot; 14&amp;#93;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Для наших целей точности уже хватает. Осталось сохранить данные для последующей обработки:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;ns enlive-examples.core
+  &amp;#40;:require &amp;#91;clojure.string :as string&amp;#93;
+            &amp;#91;cheshire.core :as chesh&amp;#93;
+            &amp;#91;net.cgrand.enlive-html :as html&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;spit &amp;quot;codefest-2013-raw.json&amp;quot; &amp;#40;chesh/generate-string grouped-data&amp;#41;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Полный исходник можно скачать &lt;a href='https://gist.github.com/glorphindale/9234032'&gt;из Gist&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Следующая остановка &amp;mdash; преобразования и группировка.&lt;/p&gt;
+</description>
+<pubDate>
+Mon, 24 Feb 2014 00:00:00 +0700
+</pubDate>
+</item>
+<item>
+<guid>
+http://glorphindale.github.io/posts/2014-02-17-incanter-intro.html
+</guid>
+<link>
+http://glorphindale.github.io/posts/2014-02-17-incanter-intro.html
+</link>
+<title>
+Incanter and the Bears
+</title>
+<description>
+&lt;p&gt;Как с помощью &lt;a href='http://www.lighttable.com/'&gt;Light Table&lt;/a&gt; начать использовать &lt;a href='http://incanter.org/'&gt;Incanter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Потребуются: &lt;a href='http://leiningen.org/'&gt;leiningen&lt;/a&gt; и Light Table.&lt;/p&gt;&lt;p&gt;Выполняем в консоли:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;lein new incanter-examples
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Открываем profile.clj, правим секцию dependencies до состояния:&lt;pre&gt;&lt;code&gt;:dependencies &amp;#91;&amp;#91;org.clojure/clojure &amp;quot;1.5.1&amp;quot;&amp;#93;
+               &amp;#91;incanter &amp;quot;1.5.4&amp;quot;&amp;#93;&amp;#93;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Открываем LightTable, в File -&gt; Open Folder -&gt; выбираем incanter-examples&lt;/p&gt;&lt;p&gt;Нажимаем Ctrl+o -&gt; incanter-examples/src/incanter-examples/core.clj&lt;/p&gt;&lt;p&gt;Нажимаем Ctrl+Space -&gt; Add Connection -&gt; Clojure -&gt; project.clj&lt;/p&gt;&lt;p&gt;Правим секцию ns до состояния&lt;pre&gt;&lt;code&gt;&amp;#40;ns incanter-examples.core
+    &amp;#40;:require &amp;#91;incanter.core :as incore&amp;#93;
+              &amp;#91;incanter.charts :as incharts&amp;#93;
+              &amp;#91;incanter.stats :as instats&amp;#93;&amp;#41;&amp;#41;
+ &lt;/code&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Нажимаем Ctrl+Enter на секции ns.&lt;/p&gt;&lt;p&gt;Добавляем в конец файла строку, на ней нажимаем Ctrl+Enter:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;incore/view &amp;#40;incharts/histogram &amp;#40;instats/sample-normal 1000&amp;#41;&amp;#41;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Появился график нормального распределения. Первый шаг к ручному медведю сделан.&lt;/p&gt;&lt;p&gt;&lt;center&gt;&lt;img src=&quot;/posts/incanter-intro/first-histogram.png&quot; alt=&quot;Histogram&quot; width=&quot;700&quot;&gt;&lt;/center&gt;&lt;/p&gt;
+</description>
+<pubDate>
+Mon, 17 Feb 2014 00:00:00 +0700
+</pubDate>
+</item>
+</channel>
+</rss>

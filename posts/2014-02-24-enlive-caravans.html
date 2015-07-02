@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Bearing Clojure / Медвекложа: Грабим корованы с Enlive, часть первая</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Alegreya:400italic,700italic,400,700' rel='stylesheet'
+          type='text/css'>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.1/styles/default.min.css">
+    <link href="../css/screen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+
+<nav class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/index.html">Bearing Clojure / Медвекложа</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li ><a href="/index.html">Home</a></li>
+                <li
+                ><a href="/archives.html">Archives</a></li>
+                
+                <li
+                >
+                <a href="/pages/about.html">About</a>
+                </li>
+                
+                <li><a href="/feed.xml">RSS</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div><!--/.container-fluid -->
+</nav>
+
+
+<div class="container">
+
+
+    <div class="row">
+        <div class="col-lg-9">
+            <div id="content">
+                
+<div id="post">
+    <div id="post-header">
+    <div id="post-meta" class="row">
+        <div class="col-lg-6">February 24, 2014</div>
+        
+    </div>
+    <h2>Грабим корованы с Enlive, часть первая</h2>
+</div>
+<div>
+    
+    <p>Для своего проекта <a href='https://github.com/glorphindale/codefest-stats'> Codefest Stats 2012 </a> мне понадобились данные по зарегистрированным участникам. Попробуем с помощью LightTable и <a href='https://github.com/cgrand/enlive'>Enlive</a> пограбить <a href='http://2013.codefest.ru/members/'> данные за 2013 год </a>.</p><p>Понадобится чистый проект c именем enlive-examples.</p><p>Нам понадобятся следующие зависимости в profile.clj:<pre><code>:dependencies &#91;&#91;org.clojure/clojure &quot;1.5.1&quot;&#93;
+               &#91;enlive &quot;1.1.5&quot;&#93;
+               &#91;cheshire &quot;5.3.1&quot;&#93;&#93;
+ </code></pre></p><p>Подключим библиотеку enlive в core.clj:<pre><code>&#40;ns enlive-examples.core
+    &#40;:require &#91;net.cgrand.enlive-html :as html&#93;&#41;&#41;
+ </code></pre></p><p>Структура элемента, который мы будем выдёргивать, такая:<pre><code>&lt;li class=&quot;b-peoples&#95;&#95;item&quot;&gt;
+    &lt;span class=&quot;b-peoples&#95;&#95;letter&quot;&gt;A&lt;/span&gt;
+    Peter Asanov
+    &lt;span class=&quot;b-peoples&#95;&#95;icons&quot;&gt;
+        &lt;a href=&quot;https://twitter.com/#!/leaxdc&quot; title=&quot;Twitter&quot; target=&quot;&#95;blank&quot; class=&quot;icon icon&#95;tw&quot;&gt;&lt;/a&gt;
+        &lt;a href=&quot;http://facebook.com/leaxdc&quot; title=&quot;Facebook&quot; target=&quot;&#95;blank&quot; class=&quot;icon icon&#95;fb&quot;&gt;&lt;/a&gt;
+        &lt;a href=&quot;http://www.linkedin.com/pub/peter-asanov/24/a08/568&quot; title=&quot;LinkedIn&quot;
+            target=&quot;&#95;blank&quot; class=&quot;icon icon&#95;ld&quot;&gt;&lt;/a&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;b-peoples&#95;&#95;company&quot;&gt;EMC, Sr. Developer&lt;/span&gt;
+&lt;/li&gt;
+ </code></pre></p><p>Нас интересуют: текстовое содержимое элемента &lt;li&gt;, и компания/должность участника.</p><p>Начнём с простого, как получить все поля компания/должность?</p><pre><code>;; Выбрать все span с классом b-peoples&#95;&#95;company, которые лежат в li с классом b-peoples&#95;&#95;item
+&#40;def selected
+  &#40;html/select raw-data &#91;:li.b-peoples&#95;&#95;item :&gt; :span.b-peoples&#95;&#95;company&#93;&#41;&#41;
+
+&#40;map html/text &#40;take 5 selected&#41;&#41;
+;; &#40;&quot;EMC, Sr. Developer&quot; &quot;IndorSoft LLC, Project Manager&quot; &quot;Squzza Dev, CTO&quot; &quot;SoftService, web dev&quot;
+;; &quot;Softage, инженер-программист&quot;&#41;
+</code></pre><p>Совет дня: по нажатию Ctrl-D LightTable выдаст документацию по символу под курсором, в том числе и по функциям enlive.</p><p>Сами по себе нас компании не интересуют, нам нужно получить связку ФИО + компания/должность. Определим функцию, которая из элемента {% highlight html %}li class="b-peoples__item"{% endhighlight %} достанет все нужные данные, и поменяем функцию выбора элементов:</p><pre><code>&#40;defn item-&gt;pair &#91;item&#93;
+  &#40;let &#91;pname &#40;-&gt; item :content &#40;nth 1&#41; string/trim&#41;
+        &#91;pcomp ppos&#93; &#40;-&gt; &#40;html/select item &#91;:span.b-peoples&#95;&#95;company html/text&#93;&#41;
+                         first
+                         &#40;string/split #&quot;,&quot;&#41;&#41;&#93;
+    &#91;pname pcomp ppos&#93;&#41;&#41;
+
+&#40;def selected
+  &#40;html/select raw-data &#91;:li.b-peoples&#95;&#95;item&#93;&#41;&#41;
+
+&#40;doall &#40;map item-&gt;pair &#40;take 3 selected&#41;&#41;&#41;
+;; &#40;&#91;&quot;Peter Asanov&quot; &quot;EMC&quot; &quot; Sr. Developer&quot;&#93; &#91;&quot;Serge Barannik&quot; &quot;IndorSoft LLC&quot; &quot; Project Manager&quot;&#93;
+;;  &#91;&quot;&quot; &quot;Squzza Dev&quot; &quot; CTO&quot;&#93;&#41;
+</code></pre><p>Первые два элемента обработаны нормально, а в третьем что-то пошло не так. Методом внимательного взгляда обнаруживаем, что элемент<pre><code class="<li">class=&quot;b-peoples&#95;&#95;item&quot;&gt;```
+имеет два вида &amp;mdash; с первой буквой фамилии и тегом
+ </code></pre><span class="b-peoples__letter">``` и без. Простого способа доступиться до текстового узла с фамилией у enlive нет, поэтому придётся применить костыль (тем более, что мы делаем простой ограбитель, а не универсальное решение):</p><pre><code>&#40;defn with-letter? &#91;item&#93;
+  &#40;= &#40;-&gt; item :content &#40;#&#40;nth % 1&#41;&#41; :attrs :class&#41;
+     &quot;b-peoples&#95;&#95;letter&quot;&#41;&#41;
+
+&#40;defn item-&gt;pair &#91;item&#93;
+  &#40;let &#91;index &#40;if &#40;with-letter? item&#41; 2 0&#41;
+        pname &#40;-&gt; item :content &#40;nth index&#41; string/trim&#41;
+        &#91;pcomp ppos&#93; &#40;-&gt; &#40;html/select item &#91;:span.b-peoples&#95;&#95;company html/text&#93;&#41;
+                         first
+                         &#40;string/split #&quot;,&quot; 2&#41;&#41;&#93;
+    &#91;pname pcomp ppos&#93;&#41;&#41;
+
+&#40;doall &#40;map item-&gt;pair &#40;take 5 selected&#41;&#41;&#41;
+;; &#40;&#91;&quot;Peter Asanov&quot; &quot;EMC&quot; &quot; Sr. Developer&quot;&#93; &#91;&quot;Serge Barannik&quot; &quot;IndorSoft LLC&quot; &quot; Project Manager&quot;&#93;
+;;  &#91;&quot;Rustam Baygulin&quot; &quot;Squzza Dev&quot; &quot; CTO&quot;&#93; &#91;&quot;Igor Dolgov&quot; &quot;SoftService&quot; &quot; web dev&quot;&#93;
+;;  &#91;&quot;Alexey Efimov&quot; &quot;Softage&quot; &quot; инженер-программист&quot;&#93;&#41;
+
+&#40;def raw-data &#40;map item-&gt;pair selected&#41;&#41;
+</code></pre><p>Теперь можно получить какие-нибудь интересные сведения:<pre><code>&#40;take 5 &#40;frequencies &#40;map first raw-data&#41;&#41;&#41;
+;; &#40;&#91;&quot;&quot; 285&#93; &#91;&quot;Денис Сандалов&quot; 3&#93; &#91;&quot;Дмитрий Турков&quot; 3&#93; &#91;&quot;Вадим Суворов&quot; 3&#93; &#91;&quot;Дмитрий Пашкевич&quot; 3&#93;&#41;
+ </code></pre></p><p>Мда. Опять не тот корован. Снова заберёмся в структуру документа:<pre><code>&lt;div data-role=&quot;peoples-names&quot; class=&quot;b-peoples&#95;&#95;page&quot; style=&quot;display: block;&quot;&gt;
+&lt;div data-role=&quot;peoples-companies&quot; class=&quot;b-peoples&#95;&#95;page&quot;&gt;
+&lt;div data-role=&quot;peoples-cities&quot; class=&quot;b-peoples&#95;&#95;page&quot;&gt;
+ </code></pre></p><p>Правим селектор, выбираем только те<pre><code>&lt;li class=&quot;b-peoples&#95;&#95;item&quot;&gt;
+которые принадлежат
+&lt;div data-role=&quot;peoples-names&quot;&gt;
+ </code></pre> Для этого воспользуемся хитрым селектором:<pre><code>&#91;&#91;:div &#40;html/attr= :data-role &quot;peoples-names&quot;&#41;&#93; :li.b-peoples&#95;&#95;item&#93;
+ </code></pre> Что это такое? Первый элемент вектора говорит нам "выбери div, у которого класс &mdash; peoples-names", а второй &mdash; "у результата найди li с классом b-peoples_item".</p><pre><code>&#40;def selected
+  &#40;html/select raw-data &#91;&#91;:div &#40;html/attr= :data-role &quot;peoples-names&quot;&#41;&#93; :li.b-peoples&#95;&#95;item&#93;&#41;&#41;
+&#40;count selected&#41;
+;; 1514
+
+&#40;def grouped-data &#40;map item-&gt;pair selected&#41;&#41;
+&#40;take 5 &#40;frequencies &#40;map first grouped-data&#41;&#41;&#41;
+;; &#40;&#91;&quot;&quot; 97&#93; &#91;&quot;Денис Сандалов&quot; 1&#93; &#91;&quot;Дмитрий Турков&quot; 1&#93; &#91;&quot;Вадим Суворов&quot; 1&#93; &#91;&quot;Дмитрий Пашкевич&quot; 1&#93;&#41;
+</code></pre><p>Уже лучше, но 97 пустых записей отделяют наши данные от официального числа участников в 1417 человек. Находим их:<pre><code>&#40;take 3 &#40;filter &#40;comp empty? first&#41; grouped-data&#41;&#41;
+;; &#40;&#91;&quot;&quot; &quot;Mirantis IT&quot; &quot; Software developer&quot;&#93; &#91;&quot;&quot; &quot;eBay&quot; &quot; Senior software engineer&quot;&#93; &#91;&quot;&quot; &quot;Badoo&quot; nil&#93;&#41;
+ </code></pre></p><p>Ага, у докладчиков свой собственный стиль тегов: имя обёрнуто в &lt;a&gt; Перетрясём преобразование элемента в человека:</p><pre><code>&#40;defn item-&gt;name &#91;item&#93;
+  &#40;if-let &#91;href &#40;first &#40;html/select item &#91;&#91;:a &#40;html/attr-starts :href &quot;/speaker&quot;&#41;&#93;&#93;&#41;&#41;&#93;
+    &#40;-&gt; href html/text&#41;
+    &#40;if &#40;with-letter? item&#41;
+      &#40;-&gt; item :content &#40;nth 2&#41; string/trim&#41;
+      &#40;-&gt; item :content &#40;nth 0&#41; string/trim&#41;&#41;&#41;&#41;
+
+&#40;defn item-&gt;person &#91;item&#93;
+  &#40;let &#91;pname &#40;item-&gt;name item&#41;
+        &#91;pcomp ppos&#93; &#40;-&gt; &#40;html/select item &#91;:span.b-peoples&#95;&#95;company html/text&#93;&#41;
+                         first
+                         &#40;string/split #&quot;,&quot; 2&#41;&#41;&#93;
+    &#91;pname pcomp ppos&#93;&#41;&#41;
+&#40;def grouped-data &#40;map item-&gt;person selected&#41;&#41;
+
+&#40;take 5 &#40;filter &#40;comp empty? first&#41; grouped-data&#41;&#41;
+;; &#40;&#41; пустых имён больше нет
+&#40;take 15 &#40;frequencies &#40;map first grouped-data&#41;&#41;&#41;
+;; &#40;&#91;&quot;Денис Сандалов&quot; 1&#93; &#91;&quot;Дмитрий Турков&quot; 1&#93; &#91;&quot;Вадим Суворов&quot; 1&#93; &#91;&quot;Дмитрий Пашкевич&quot; 1&#93; ...
+
+&#40;-&gt;&gt; grouped-data
+     &#40;map second&#41;
+     frequencies
+     &#40;sort-by second&#41;
+     reverse
+     &#40;take 10&#41;&#41;
+;; &#40;&#91;&quot;2ГИС&quot; 122&#93; &#91;&quot;Parallels&quot; 61&#93; &#91;&quot;Alawar Entertainment&quot; 45&#93; &#91;&quot;Сбербанк-Технологии&quot; 26&#93;
+;;  &#91;&quot;СКБ Контур&quot; 25&#93; &#91;&quot;Тамтэк&quot; 23&#93; &#91;&quot;ЦФТ&quot; 21&#93; &#91;&quot;Сигнатек&quot; 19&#93; &#91;&quot;Центр автоматизации энергосбережения&quot; 19&#93;
+;;  &#91;&quot;Softline&quot; 17&#93;&#41;
+</code></pre><p>Наконец-то похоже на правду. Но сравнение по количеству людей с сайтом КотикФеста всё ещё даёт повод для грусти: например, "Центр автоматизации энергосбережения" на сайте представлен несколькими компаниями в разных написаниях.</p><pre><code>&#40;defn item-&gt;person &#91;item&#93;
+  &#40;let &#91;pname &#40;item-&gt;name item&#41;
+        parts &#40;-&gt; &#40;html/select item &#91;:span.b-peoples&#95;&#95;company html/text&#93;&#41;
+                         first
+                         &#40;string/split #&quot;,&quot; 2&#41;&#41;
+        &#91;pcomp ppos&#93; &#40;-&gt;&gt; parts
+                          &#40;map string/trim&#41;
+                          &#40;map string/lower-case&#41;&#41;&#93;
+    &#91;pname pcomp ppos&#93;&#41;&#41;
+
+&#40;-&gt;&gt; grouped-data
+     &#40;map second&#41;
+     frequencies
+     &#40;sort-by second&#41;
+     reverse
+     &#40;take 15&#41;&#41;
+;; &#40;&#91;&quot;2гис&quot; 122&#93; &#91;&quot;parallels&quot; 61&#93; &#91;&quot;alawar entertainment&quot; 45&#93; &#91;&quot;сбербанк-технологии&quot; 26&#93;
+;;  &#91;&quot;скб контур&quot; 25&#93; &#91;&quot;центр автоматизации энергосбережения&quot; 24&#93; &#91;&quot;тамтэк&quot; 23&#93; &#91;&quot;цфт&quot; 21&#93;
+;;  &#91;&quot;сигнатек&quot; 19&#93; &#91;&quot;softline&quot; 17&#93; &#91;&quot;intel&quot; 17&#93; &#91;&quot;новотелеком&quot; 16&#93; &#91;&quot;ronas it&quot; 16&#93;
+;;  &#91;&quot;7bits&quot; 14&#93; &#91;&quot;нгс&quot; 14&#93;&#41;
+</code></pre><p>Для наших целей точности уже хватает. Осталось сохранить данные для последующей обработки:</p><pre><code>&#40;ns enlive-examples.core
+  &#40;:require &#91;clojure.string :as string&#93;
+            &#91;cheshire.core :as chesh&#93;
+            &#91;net.cgrand.enlive-html :as html&#93;&#41;&#41;
+
+&#40;spit &quot;codefest-2013-raw.json&quot; &#40;chesh/generate-string grouped-data&#41;&#41;
+</code></pre><p>Полный исходник можно скачать <a href='https://gist.github.com/glorphindale/9234032'>из Gist</a>.</p><p>Следующая остановка &mdash; преобразования и группировка.</p>
+</div>
+
+<div id="post-tags">
+    <b>Tags: </b>
+    
+    <a href="/tags/clojure.html">clojure</a>
+    
+</div>
+
+
+    <div id="prev-next">
+        
+        <a href="/posts/2014-03-15-caravans-parsing.html">&laquo; Грабим корованы с Enlive, часть вторая</a>
+        
+        
+        <a class="right" href="/posts/2014-02-17-incanter-intro.html">Incanter and the Bears &raquo;</a>
+        
+    </div>
+
+    
+
+
+</div>
+
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div id="sidebar">
+                <h3>Links</h3>
+                <ul id="links">
+                    
+                </ul>
+                
+                <div id="recent">
+                    <h3>Recent Posts</h3>
+                    <ul>
+                        
+                        <li><a href="/posts/2014-06-29-quil-math.html">quil, sin и cos</a></li>
+                        
+                        <li><a href="/posts/2014-03-15-caravans-parsing.html">Грабим корованы с Enlive, часть вторая</a></li>
+                        
+                        <li><a href="/posts/2014-02-24-enlive-caravans.html">Грабим корованы с Enlive, часть первая</a></li>
+                        
+                        <li><a href="/posts/2014-02-17-incanter-intro.html">Incanter and the Bears</a></li>
+                        
+                    </ul>
+                </div>
+                
+                
+                <div id="tags">
+                    <h3>Tags</h3>
+                    <ul>
+                        
+                        <li><a href="/tags/clojure.html">clojure</a></li>
+                        
+                    </ul>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <footer>Copyright &copy; 2015 glorphindale
+        <p style="text-align: center;">Powered by <a href="http://cryogenweb.org">Cryogen</a></p></footer>
+</div>
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="../js/highlight.pack.js" type="text/javascript"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
