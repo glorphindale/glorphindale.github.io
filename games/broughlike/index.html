@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<title>Awesome Broughlike</title>
+
+
+<style>
+    canvas {
+        outline: 1px solid white;
+    }
+    body {
+        background-color: indigo;
+        text-align: center;
+        margin-top: 50px;
+    }
+</style>
+
+<canvas></canvas>
+
+<h4>Result of following along<a href="https://nluqo.github.io/broughlike-tutorial/">Broughlike tutorial</a> at /r/roguelikedev</h4>
+
+<script src="js/game.js"></script>
+<script src="js/map.js"></script>
+<script src="js/monster.js"></script>
+<script src="js/spell.js"></script>
+<script src="js/tile.js"></script>
+<script src="js/util.js"></script>
+
+<script>
+    // gameplay
+    num_tiles = 11;
+    max_hp = 6;
+    num_levels = 6;
+    starting_hp = 3;
+    game_state = "loading";
+    shake_amount = 0;
+    shake_x = 0;
+    shake_y = 0;
+    // ui
+    tile_size = 64;
+    ui_width = 4; // Should be 4 when ui is added
+    wall_density = 0.2;
+
+    SPRITE_PLAYER = 0;
+    SPRITE_PLAYER_DEAD = 1;
+    SPRITE_FLOOR = 2;
+    SPRITE_WALL = 3;
+    SPRITE_DODO = 4;
+    SPRITE_LIZARD = 5;
+    SPRITE_ECTO = 6;
+    SPRITE_SNAKE = 7;
+    SPRITE_JESTER = 8;
+    SPRITE_HEALTH = 9;
+    SPRITE_PORTAL = 10;
+    SPRITE_EXIT = 11;
+    SPRITE_GEM = 12;
+    SPRITE_AURA = 13;
+    SPRITE_FIREBALL = 14;
+    SPRITE_BOLT_H = 15;
+    SPRITE_BOLT_V = 16;
+    SPRITE_SHIELD = 17;
+
+    spritesheet = new Image();
+    spritesheet.src = 'spritesheet.png';
+    spritesheet.onload = showTitle;
+    
+    document.querySelector("html").onkeypress = function(e) {
+        if (game_state == "title") {
+            startGame();
+        } else if (game_state == "dead") {
+            showTitle();
+        } else if (game_state == "running") {
+            if (e.key == "w") player.tryMove(0, -1);
+            if (e.key == "s") player.tryMove(0, 1);
+            if (e.key == "a") player.tryMove(-1, 0);
+            if (e.key == "d") player.tryMove(1, 0);
+            if (e.key >= 1 && e.key <= 9) player.castSpell(e.key-1);
+        }
+    };
+
+    // Complete initialization
+    initSounds();
+    setInterval(draw, 15);
+    setupCanvas();
+</script>
